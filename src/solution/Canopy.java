@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URI;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -25,14 +26,22 @@ import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-import solution.FinalProj.MyCounters;
 
 public class Canopy {
 	
+private double T1 = 1;
+private double T2 = 0;
+	
 public static class CanopyMapper
     extends Mapper<LongWritable, Text, IntWritable, StockWritable>{
+}
 
- @Override
+ private List<StockWritable> mapperCanopyCenters;
+ 
+ public void setup(Context context) throws IOException,InterruptedException {
+	 this.mapperCanopyCenters = new ArrayList<StockWritable>();
+ } 
+
  public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
  	
 	 // split the the line to name|days..
@@ -53,34 +62,24 @@ public static class CanopyMapper
  	// create the stock vector
  	StockWritable tmpStock = new StockWritable(tmp2DArray, new Text(data[0]));
  	
- 	// check if in on of the T1 	
+ 	// check if in on of the T1
+ 	int centersIndex = -1;
  	
- 	context.write(new LogWritable(new Text(line[3]), new Text(line[1]), new Text(line[2]), new IntWritable(Integer.parseInt(line[0]))),new IntWritable(1));   	  
- }   
-}
-
- 
-public static class LogReducer
-    extends Reducer<LogWritable,IntWritable,Text,IntWritable> {
-
- public void reduce(LogWritable key, Iterable<IntWritable> values,
-                    Context context
-                    ) throws IOException, InterruptedException {;
-                 
-   // count the amount of time you get into the reduser
-   context.getCounter(MyCounters.Counter).increment(1);
-    
-   // count the number of visits
-   int counter = 0;
-   System.out.println(key.GetKey());
-   for (IntWritable val : values) {
- 	  counter += val.get();
-   }
-
-   context.write(new Text(key.GetKey()), new IntWritable(counter));
- }
+ 	// Run on all the centers
+ 	do
+ 	{
+ 		centersIndex++;
+ 	}
+ 	while((centersIndex <= this.mapperCanopyCenters.size()) && 
+ 			(tmpStock.distance(this.mapperCanopyCenters.get(centersIndex)) > this.T1));
+ 	
+ 	// Check if found a match
+ 	if (centersIndex > this.mapperCanopyCenters.size()) {
+ 		// dont found a relevent center for the current stock, add the stoce to the center point list
+ 		this.mapperCanopyCenters.add(tmpStock);
+ 		
+	}   	  
+}   
 
 
-	
-	
 }
