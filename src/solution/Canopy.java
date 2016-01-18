@@ -29,19 +29,21 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class Canopy {
 	
-private double T1 = 1;
-private double T2 = 0;
-	
-public static class CanopyMapper
-    extends Mapper<LongWritable, Text, IntWritable, StockWritable>{
-}
 
- private List<StockWritable> mapperCanopyCenters;
+	
+public static class canopyMapper
+    extends Mapper<LongWritable, Text, IntWritable, canopyCenter>{
+
+ // TODO: put T1,T2 to global cash
+	private double T1 = 1;
+	private double T2 = 0;
+ private List<canopyCenter> mapperCanopyCenters;
  
  public void setup(Context context) throws IOException,InterruptedException {
-	 this.mapperCanopyCenters = new ArrayList<StockWritable>();
+	 this.mapperCanopyCenters = new ArrayList<canopyCenter>();
  } 
 
+ @Override
  public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
  	
 	 // split the the line to name|days..
@@ -60,26 +62,90 @@ public static class CanopyMapper
  	}
  	
  	// create the stock vector
- 	StockWritable tmpStock = new StockWritable(tmp2DArray, new Text(data[0]));
+ 	StockWritable currStock = new StockWritable(tmp2DArray, new Text(data[0]));
  	
- 	// check if in on of the T1
- 	int centersIndex = -1;
+ 	// run on lape of canopy on the current stack
+ 	int result = canopyPointCheck(currStock,this.mapperCanopyCenters,T1,T2);
  	
- 	// Run on all the centers
- 	do
+ 	// increase the counter
+ 	if (result >= 0)
  	{
- 		centersIndex++;
+ 		this.mapperCanopyCenters.get(result).increasCounter(1);
  	}
- 	while((centersIndex <= this.mapperCanopyCenters.size()) && 
- 			(tmpStock.distance(this.mapperCanopyCenters.get(centersIndex)) > this.T1));
- 	
- 	// Check if found a match
- 	if (centersIndex > this.mapperCanopyCenters.size()) {
- 		// dont found a relevent center for the current stock, add the stoce to the center point list
- 		this.mapperCanopyCenters.add(tmpStock);
- 		
-	}   	  
-}   
-
-
 }
+ 
+ @Override
+ protected void cleanup(org.apache.hadoop.mapreduce.Mapper.Context context)
+         throws IOException,InterruptedException
+         {
+	 		// write the center point in the canopy to the hdfs 
+	 		// run on all the centers
+	 		for (int center = 0; center < this.mapperCanopyCenters.size(); center++) {
+	 			context.write(new IntWritable(1), this.mapperCanopyCenters.get(center));
+			}
+         }
+	}
+
+
+public static class canopyReducer
+    extends Reducer<IntWritable,canopyCenter,canopyCenter,Text> {
+
+ public void reduce(IntWritable key, Iterable<canopyCenter> values,
+                    Context context
+                    ) throws IOException, InterruptedException {
+	 // init the centers list
+	 ArrayList<canopyCenter> mapperCanopyCenters = new ArrayList<canopyCenter>();
+	 
+     // Run on all the "local" mappers centers and preform canopy algoritem for custring
+	 for (canopyCenter localCenter : values) {
+		 // TODO: change the T1 & T2 
+		 int result = canopyPointCheck(localCenter.get(),mapperCanopyCenters,1,0);
+		 if (result >= 0 )
+		 {
+			 mapperCanopyCenters.get(result).increasCounter(localCenter.getClusterSize());
+		 }
+     }
+
+	//write the centers to HDFS
+	 for (canopyCenter globalCenter : mapperCanopyCenters) {
+		 context.write(globalCenter, new Text(""));
+     }
+ }
+}
+
+
+// chech if the stock is center
+// if in T1 return center index in list
+// if in T2 return -2
+// if stock is center return -1
+ private static int canopyPointCheck(StockWritable currStock, List<canopyCenter> centers, double T1,double T2)
+	{
+	 	// check if in on of the T1
+	 	int centersIndex = -1;
+	 	double distance;
+	 	
+	 	// Run on all the centers
+	 	do
+	 	{
+	 		centersIndex++;
+	 		distance = currStock.distance(centers.get(centersIndex).get());
+	 	}
+	 	while((centersIndex <= centers.size()) && 
+	 			(distance > T1));
+	 	
+	 	// Check if found a match
+	 	if (centersIndex > centers.size()) {
+	// dont found a relevent center for the current stock, add the stoce to the center point list
+	 		centers.add(new canopyCenter(currStock));
+	 		return -1;
+	 	// Check if the point isnt in T2 for increase the cluster counter
+	 	}else if (distance > T2)
+	 	{
+	 		// inform the the point is in T2
+	 		return -2;
+	 	}
+	 	
+	 	return centersIndex;
+	}
+}
+

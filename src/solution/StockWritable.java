@@ -15,7 +15,7 @@ import java.io.IOException;
 public class StockWritable extends Configured implements Writable,Comparable<StockWritable> {
 
 	// DM
-  private Text stackName;
+  private Text stockName;
   private TwoDArrayWritable stock;
   
   public enum type {
@@ -34,7 +34,7 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
   
 //  public StockWritable(String name,int n,int m)
 //  {
-//	  this.stackName = new Text(name);
+//	  this.stockName = new Text(name);
 //	  
 //	  // create the stack vector
 //	  this.stock = new TwoDArrayWritable(DoubleWritable.class);
@@ -43,10 +43,16 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
 //  }
   public StockWritable(DoubleWritable[][] v, Text name)
   {
-	  this.stackName = new Text(name);
+	  this.stockName = new Text(name);
 	  
 	  // create the stack vector
 	  this.set(v);
+  }
+  
+  public StockWritable(StockWritable stock)
+  {
+	  this.stockName = stock.stockName;
+	  this.stock.set(stock.get().get());
   }
   
   public int getDaysNumber()
@@ -60,7 +66,7 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
   }
   
   private Text getName() {
-	return this.stackName;
+	return this.stockName;
 
 }
   
@@ -80,7 +86,7 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
   }
 
   public StockWritable(TwoDArrayWritable v, Text name) {
-	  this.stackName = name;
+	  this.stockName = name;
 	  this.stock = v;
   }
 
@@ -88,7 +94,7 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
   public void write(DataOutput out) throws IOException 
   {   
 	  // write the name of the stack
-	  this.stackName.write(out);
+	  this.stockName.write(out);
 	  
 	  // write all the vector 
       this.stock.write(out);  
@@ -98,7 +104,7 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
   public void readFields(DataInput in) throws IOException {
     try {
   	  // read the name of the stack
-  	  this.stackName.readFields(in);
+  	  this.stockName.readFields(in);
   	  
   	  // read all the vector 
 	  this.stock.readFields(in);
