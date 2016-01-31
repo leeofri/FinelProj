@@ -41,6 +41,14 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
 //	  DoubleWritable[][] v = new DoubleWritable[n][m];
 //	  this.stock.set(v);
 //  }
+  public StockWritable()
+  {
+	  this.stockName = new Text();
+	  
+	  // create the stack vector
+	  this.set(new TwoDArrayWritable(DoubleWritable.class));
+  }
+  
   public StockWritable(DoubleWritable[][] v, Text name)
   {
 	  this.stockName = new Text(name);
@@ -52,7 +60,7 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
   public StockWritable(StockWritable stock)
   {
 	  this.stockName = stock.stockName;
-	  this.stock.set(stock.get().get());
+	  this.stock = new TwoDArrayWritable(DoubleWritable.class,stock.get().get());
   }
   
   public int getDaysNumber()
@@ -81,8 +89,6 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
   public void set(DoubleWritable[][] Stock) {
 	  this.stock = new TwoDArrayWritable(DoubleWritable.class);
 	  this.stock.set(Stock);
-  }
-  public StockWritable() {
   }
 
   public StockWritable(TwoDArrayWritable v, Text name) {
@@ -116,17 +122,27 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
 
 	@Override
 	public int compareTo(StockWritable o) {
-		// TODO: compare by stack name
-		return 0;
+		return this.stockName.compareTo(o.stockName);
 	}
 	
-	public int distance(StockWritable o){
+	public double distance(StockWritable o){
 		// calc the distance between all the four parameter of each day
-		int distance = 0;
+		double distance = 0;
 		
-		for (int day = 0; day < this.getDaysNumber(); day++) {
+		// TODO: take down after fix input
+		int minDays = Math.min(this.getDaysNumber(),o.getDaysNumber());
+		
+		
+		for (int day = 0; day < minDays; day++) {
 			for (int parameter = 0; parameter < this.getDataTypsNumber(); parameter++) {
-				distance += Math.abs(((DoubleWritable)this.stock.get()[day][parameter]).get() - ((DoubleWritable)o.stock.get()[day][parameter]).get() );
+				try
+				{
+					distance += Math.abs(((DoubleWritable)this.stock.get()[day][parameter]).get() - ((DoubleWritable)o.stock.get()[day][parameter]).get() );
+				}
+				catch(Exception ex)
+				{
+					System.out.println("this- size:"+this.stock.get().length + "," + this.stock.get()[day].length + " & second- size: " + o.stock.get().length+ "," + this.stock.get()[day].length +"-> " +day+"*"+parameter+" = "+ day*parameter);
+				}
 			}
 		}
 		

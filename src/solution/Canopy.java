@@ -14,10 +14,13 @@ import org.apache.commons.lang.math.LongRange;
 import org.apache.commons.math.optimization.fitting.ParametricRealFunction;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -35,7 +38,7 @@ public static class canopyMapper
     extends Mapper<LongWritable, Text, IntWritable, canopyCenter>{
 
  // TODO: put T1,T2 to global cash
-	private double T1 = 1;
+	private double T1 = 5;
 	private double T2 = 0;
  private List<canopyCenter> mapperCanopyCenters;
  
@@ -47,7 +50,7 @@ public static class canopyMapper
  public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
  	
 	 // split the the line to name|days..
- 	String[] data = value.toString().split("|");
+ 	String[] data = value.toString().split("\\|");
  	
  	// create the 2D array
  	DoubleWritable[][] tmp2DArray = new DoubleWritable[data.length -1][];
@@ -57,7 +60,7 @@ public static class canopyMapper
  		String[] singleDaypParametrs = data[day].split(" ");
  		tmp2DArray[day-1] = new DoubleWritable[singleDaypParametrs.length];
  		for (int paramter = 0; paramter < singleDaypParametrs.length; paramter++) {
- 			tmp2DArray[day-1][paramter] = new DoubleWritable(Integer.parseInt(singleDaypParametrs[paramter]));
+ 			tmp2DArray[day-1][paramter] = new DoubleWritable(Double.parseDouble(singleDaypParametrs[paramter]));
 		}
  	}
  	
@@ -99,16 +102,30 @@ public static class canopyReducer
      // Run on all the "local" mappers centers and preform canopy algoritem for custring
 	 for (canopyCenter localCenter : values) {
 		 // TODO: change the T1 & T2 
-		 int result = canopyPointCheck(localCenter.get(),mapperCanopyCenters,1,0);
+		 int result = canopyPointCheck(localCenter.get(),mapperCanopyCenters,5,0);
 		 if (result >= 0 )
 		 {
 			 mapperCanopyCenters.get(result).increasCounter(localCenter.getClusterSize());
 		 }
      }
-
+	
+	// Creat the connection
+	 Configuration conf = context.getConfiguration(); 
+	 Writer writer = null; 
+	 
+	 try {
+		 writer = SequenceFile.createWriter(conf, Writer.file(new Path("/data/SequenceFile.canopyCenters")),
+	                             Writer.keyClass(Text.class),
+	                             Writer.valueClass(canopyCenter.class));
+	 }
+	 catch (ClassCastException cce) {
+	      throw new IOException(cce);
+	    }
+	 
 	//write the centers to HDFS
 	 for (canopyCenter globalCenter : mapperCanopyCenters) {
-		 context.write(globalCenter, new Text(""));
+		 writer.append(globalCenter, new Text(""));
+
      }
  }
 }
@@ -120,22 +137,27 @@ public static class canopyReducer
 // if stock is center return -1
  private static int canopyPointCheck(StockWritable currStock, List<canopyCenter> centers, double T1,double T2)
 	{
-	 	// check if in on of the T1
-	 	int centersIndex = -1;
-	 	double distance;
-	 	
-	 	// Run on all the centers
-	 	do
-	 	{
-	 		centersIndex++;
-	 		distance = currStock.distance(centers.get(centersIndex).get());
-	 	}
-	 	while((centersIndex <= centers.size()) && 
-	 			(distance > T1));
-	 	
+		// check if in on of the T1
+		int centersIndex = 0;
+		double distance = 0;
+		
+		if (centers.size() != 0)
+		{ 	
+			 	// Run on all the centers
+			 	do
+			 	{		 		
+			 		System.out.println(centers.size() + " index: " + centersIndex );
+			 		distance = currStock.distance(centers.get(centersIndex).get());
+			 		centersIndex++;
+			 	}
+			 	while((centersIndex < centers.size()) && 
+			 			(distance > T1));
+			 	
+		}
+		 
 	 	// Check if found a match
-	 	if (centersIndex > centers.size()) {
-	// dont found a relevent center for the current stock, add the stoce to the center point list
+	 	if (centersIndex == centers.size()) {
+	 		// dont found a relevent center for the current stock, add the stoce to the center point list
 	 		centers.add(new canopyCenter(currStock));
 	 		return -1;
 	 	// Check if the point isnt in T2 for increase the cluster counter
@@ -146,6 +168,7 @@ public static class canopyReducer
 	 	}
 	 	
 	 	return centersIndex;
-	}
+		}
 }
+
 

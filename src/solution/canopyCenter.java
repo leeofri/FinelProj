@@ -12,19 +12,28 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public class canopyCenter  implements Writable{
+public class canopyCenter  implements Writable,Comparable<canopyCenter>{
 	
 
   private IntWritable pointsInCluster;
   private StockWritable clusterCenter;
   
-
-  public canopyCenter(int amuntOfPoints, StockWritable center)
+  public canopyCenter() {
+	  canopyCenter(1,new StockWritable());
+  }
+  
+  private void canopyCenter(int amuntOfPoints, StockWritable center)
   {
+	  
 	  this.pointsInCluster = new IntWritable(amuntOfPoints);
 	  
 	  // create the stack vector
 	  this.clusterCenter = new StockWritable(center);
+  }
+
+public canopyCenter(int amuntOfPoints, StockWritable center)
+  {
+	canopyCenter(amuntOfPoints,center);
   }
   
   public canopyCenter(StockWritable center)
@@ -74,6 +83,11 @@ public class canopyCenter  implements Writable{
       throw new IOException(cce);
     }
   }
+
+@Override
+public int compareTo(canopyCenter o) {
+	return this.clusterCenter.compareTo(o.get());
+}
 }
 
 

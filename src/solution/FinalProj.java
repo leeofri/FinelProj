@@ -21,6 +21,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import solution.Canopy.canopyMapper;
+import solution.Canopy.canopyReducer;
+
 
 public class FinalProj {
   
@@ -29,20 +32,21 @@ public class FinalProj {
   
     Job job = Job.getInstance(conf, "FinelProj");
     job.setJarByClass(FinalProj.class);
-//    job.setMapperClass(LogMapper.class);
+    job.setMapperClass(canopyMapper.class);
 //    job.setCombinerClass(LogCombainer.class);
-//    job.setReducerClass(LogReducer.class);
-    job.setOutputKeyClass(Text.class);
-//    job.setOutputValueClass(IntWritable.class);
-//    job.setMapOutputKeyClass(LogWritable.class);
-    job.setMapOutputValueClass(IntWritable.class);
+    job.setReducerClass(canopyReducer.class);
+    job.setOutputKeyClass(canopyCenter.class);
+    job.setOutputValueClass(Text.class);
+    job.setMapOutputKeyClass(IntWritable.class);
+    job.setMapOutputValueClass(canopyCenter.class);
 
-    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+//    FileOutputFormat.setOutputPath(job, new Path(args[1]));
 //    FileInputFormat.addInputPath(job, new Path(args[0]));
 
 //    debug localhost
-//    FileOutputFormat.setOutputPath(job, new Path("/home/training/Documents/output/32"));
-//    FileInputFormat.addInputPath(job, new Path("/home/training/Documents/Web_logs/Log0.txt"));
+    FileOutputFormat.setOutputPath(job, new Path("/home/training/workspace/FinalProj/output"));
+    FileInputFormat.addInputPath(job, new Path("/home/training/workspace/FinalProj/input"));
     
     
     // print the counter
