@@ -168,7 +168,7 @@ public class FinalProj {
 
 		for (canopyCenter canopyCenter : canopyCentres) {
 
-			int kmeansNumber = calcKmeansForCanopy();
+			int kmeansNumber = calcKmeansForCanopy(canopyCenter.getClusterSize(), stockCount);
 
 			for (int i = 0; i < kmeansNumber; i++) {
 
@@ -194,9 +194,11 @@ public class FinalProj {
 	
 	}
 
-	private static int calcKmeansForCanopy() {
-		// TODO Auto-generated method stub
-		return 0;
+	private static int calcKmeansForCanopy(double stocksPerCanopy, double stockCount) {
+		
+		double propotion = stocksPerCanopy / stockCount;
+		
+		return (int) Math.round(Globals.kmeansCount * propotion); 
 	}
 
 
