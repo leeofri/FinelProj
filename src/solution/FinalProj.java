@@ -178,34 +178,32 @@ public class FinalProj {
 		return 0;
 	}
 
-	private static KMeansCenter GetRendomKmeanCenterByCanapoy(int N, double R ) {
+	private static KMeansCenter GetRendomKmeanCenterByCanapoy(int N, double R, canopyCenter sphereCenter ) {
 		
 
-		KMeansCenter randomKmeans = new KMeansCenter();
+		double U = Math.pow(StdRandom.gaussian(), 1/N)*R;
 		
-
-	 	// create the 2D array
-	 	DoubleWritable[][] tmp2DArray = new DoubleWritable[N][Globals.featuresNumber];
+	 	// create the vector
+	 	//DoubleWritable[][] tmp2DArray = new DoubleWritable[N][Globals.featuresNumber];
+		StockWritable randomVector = new StockWritable(sphereCenter.get());
 		
 		for (int currFeature = 0; currFeature < Globals.featuresNumber; currFeature++) {
 			
-			// generate N variables from Gaussian distribution
-			for (int day = 0; day < N; day++)
-				tmp2DArray[day][currFeature] = 
-					new DoubleWritable(StdRandom.gaussian());
+			double sum = 0.0;
 			
-	
 			// compute Euclidean norm of vector x[]
 			for (int day = 0; day < N; day++)
-			{
-				r = r + tmp2DArray[day][currFeature] * tmp2DArray[day][currFeature];
-			}
-			r = Math.sqrt(r);
+				sum =+ Math.pow(((DoubleWritable)randomVector.get().get()[day][currFeature]).get(),2); 
+			sum = Math.sqrt(sum);
+			
+			// print scaled vector
+			for (int day = 0; day < N; day++)
+				((DoubleWritable)randomVector.get().get()[day][currFeature]).set(((DoubleWritable)randomVector.get().get()[day][currFeature]).get() * U / sum);
 		}
 		
-
-		// print scaled vector
-		for (int i = 0; i < N; i++)
-			System.out.println(x[i] / r);
+		// check
+		System.out.println("GetRendomKmeanCenterByCanapoy (check)-> T1:" + Globals.T1() + " - dis: " + sphereCenter.get().distance(randomVector));
+		
+		return(new KMeansCenter(randomVector));
 	}
 }
