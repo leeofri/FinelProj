@@ -1,3 +1,4 @@
+package solution.ThirdParty;
 /******************************************************************************
  *  Compilation:  javac StdRandom.java
  *  Execution:    java StdRandom
