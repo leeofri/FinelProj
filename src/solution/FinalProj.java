@@ -167,6 +167,9 @@ public class FinalProj {
 			for (int i = 0; i < kmeansNumber; i++) {
 
 				KMeansCenter randomKmeans = GetRendomKmeanCenterByCanapoy();
+				
+				// Giving name for the kmeans - this name used by the kmeans mapper
+				randomKmeans.getCenter().setName(String.valueOf(i));
 
 				writer.append(canopyCenter, randomKmeans);
 			}
@@ -178,7 +181,8 @@ public class FinalProj {
 		return 0;
 	}
 
-	private static KMeansCenter GetRendomKmeanCenterByCanapoy(int N, double R ) {
+	private static KMeansCenter GetRendomKmeanCenterByCanapoy(int N, 
+															  double R ) {
 		
 
 		KMeansCenter randomKmeans = new KMeansCenter();
@@ -200,6 +204,7 @@ public class FinalProj {
 			{
 				r = r + tmp2DArray[day][currFeature] * tmp2DArray[day][currFeature];
 			}
+			
 			r = Math.sqrt(r);
 		}
 		
