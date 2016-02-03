@@ -73,7 +73,7 @@ public class StockWritable extends Configured implements Writable,Comparable<Sto
 	  return this.stock.get()[0].length;
   }
   
-  private Text getName() {
+  public Text getName() {
 	return this.stockName;
 
 }

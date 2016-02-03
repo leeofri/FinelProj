@@ -109,22 +109,22 @@ public static class canopyReducer
 		 }
      }
 	
-	// Creat the connection
+	// Create the connection
 	 Configuration conf = context.getConfiguration(); 
 	 Writer writer = null; 
 	 
 	 try {
-		 writer = SequenceFile.createWriter(conf, Writer.file(new Path("/data/SequenceFile.canopyCenters")),
+		 writer = SequenceFile.createWriter(conf,Writer.file(new Path("/home/training/workspace/FinalProj/data/SequenceFile.canopyCenters")),
 	                             Writer.keyClass(Text.class),
 	                             Writer.valueClass(canopyCenter.class));
 	 }
-	 catch (ClassCastException cce) {
-	      throw new IOException(cce);
+	 catch (Exception e) {
+	      throw new IOException(e);
 	    }
 	 
 	//write the centers to HDFS
 	 for (canopyCenter globalCenter : mapperCanopyCenters) {
-		 writer.append(globalCenter, new Text(""));
+		 writer.append(globalCenter.get().getName(), globalCenter);
 
      }
  }
@@ -146,7 +146,6 @@ public static class canopyReducer
 			 	// Run on all the centers
 			 	do
 			 	{		 		
-			 		System.out.println(centers.size() + " index: " + centersIndex );
 			 		distance = currStock.distance(centers.get(centersIndex).get());
 			 		centersIndex++;
 			 	}
