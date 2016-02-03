@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -129,7 +130,7 @@ public class FinalProj {
 	}
 
 	private static void InitKmeansJobSequenceFile(Configuration conf)
-			throws IOException {
+			throws Exception {
 
 		SequenceFile.Reader reader = null;
 
@@ -154,11 +155,16 @@ public class FinalProj {
 
 		// Create the connection
 		Writer writer = null;
-
-		writer = SequenceFile.createWriter(conf,
-				Writer.file(Globals.KmeansCenterPath()),
-				Writer.keyClass(canopyCenter.class),
-				Writer.valueClass(KMeansCenter.class));
+		
+		
+		try {
+			writer = SequenceFile.createWriter(conf,
+					Writer.file(Globals.KmeansCenterPath()),
+					Writer.keyClass(canopyCenter.class),
+					Writer.valueClass(KMeansCenter.class));
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
 
 		for (canopyCenter canopyCenter : canopyCentres) {
 
@@ -177,6 +183,15 @@ public class FinalProj {
 				writer.append(canopyCenter, randomKmeans);
 			}
 		}
+		
+		// add the SequenceFile to the global
+		try {
+			DistributedCache.addCacheFile(Globals.KmeansCenterPath().toUri(), conf);
+		} catch (Exception e) {
+			System.out.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: " + Globals.KmeansCenterPath().toUri());
+			throw e;
+		}
+	
 	}
 
 	private static int calcKmeansForCanopy() {

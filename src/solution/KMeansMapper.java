@@ -3,6 +3,7 @@ package solution;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -30,23 +31,21 @@ public class KMeansMapper extends
 		// Reading the canopy centers and the kmeans centers
 
 		// Getting all the paths
-		Path[] paths = context.getLocalCacheFiles();
+		URI[] paths = context.getCacheFiles();
 
 		// Reading the canopy centers and the kmeans centers from diserbuted
 		if (paths.length > 0) {
-
-			ReadingKmeans(context.getConfiguration());
+			ReadingKmeans(context.getConfiguration(), paths[0]);
 		}
 	}
 
-	private void ReadingKmeans(Configuration conf) throws IOException {
+	private void ReadingKmeans(Configuration conf,URI KmeansCentersURI) throws IOException {
 
 		// Reading from the sequence file
 		SequenceFile.Reader reader = null;
 
 		try {
-			reader = new SequenceFile.Reader(conf, Reader.file(Globals
-					.KmeansCenterPath()));
+			reader = new SequenceFile.Reader(conf, Reader.file(new Path(KmeansCentersURI)));
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
@@ -63,6 +62,9 @@ public class KMeansMapper extends
 				kmeansCenters.put(key, kmeans);
 			}
 		}
+		
+		// close the reader
+		reader.close();
 
 	}
 
