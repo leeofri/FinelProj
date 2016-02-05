@@ -1,6 +1,7 @@
 package solution;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,6 +12,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import solution.ThirdParty.*;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.math.LongRange;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -61,13 +64,14 @@ public class FinalProj {
 		// FileInputFormat.addInputPath(job, new Path(args[0]));
 
 		// debug localhost
-		FileOutputFormat.setOutputPath(job, new Path(
-				"/home/training/workspace/FinalProj/output/Canopy"));
-		FileInputFormat.addInputPath(job, new Path(
-				"/home/training/workspace/FinalProj/input"));
-
+		FileOutputFormat.setOutputPath(job, Globals.OutputFolder());
+		FileInputFormat.addInputPath(job, Globals.InputFolder());
+		
+		// TODO : lee delete debug 
+	    IsDeleteUtputFolder(true);
+		
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
-
+		
 		// Kmeans
 		Job kmeansJob = Job.getInstance(conf, "FinelProj.KMeans");
 		job.setJarByClass(FinalProj.class);
@@ -99,7 +103,20 @@ public class FinalProj {
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 
-	private static void ReadingUserConfigFile() {
+	private static void IsDeleteUtputFolder(Boolean indicate) {
+		if (indicate) {
+			// Deleting the output folder
+			try {
+				File outputFolder = new File("output");
+				FileUtils.deleteDirectory(outputFolder);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void ReadingUserConfigFile() throws IOException {
 		try {
 			Path pt = Globals.UserConfigFilePath();
 			FileSystem fs = FileSystem.get(new Configuration());
@@ -107,25 +124,29 @@ public class FinalProj {
 					fs.open(pt)));
 			String line;
 			line = br.readLine();
-
-			// spilits parameter
-			String filedType;
-			String val = "";
-
-			while (line != null) {
-				System.out.println(line);
-				line = br.readLine();
-
-			}
+			
 
 			String[] values = line.split(" ");
 
-			// TODO : LEE reflecation
+			// TODO : LEE reflecation 
 			Globals.setKmeansCount(Integer.parseInt(values[1]));
 			Globals.setDaysNumber(Integer.parseInt(values[3]));
-			Globals.setFeaturesNumber(Integer.parseInt(values[3]));
+			Globals.setFeaturesNumber(Integer.parseInt(values[5]));
+			
+			// spilits parameter
+			String filedType;
+			String val = "";
+			
+			while (line != null) {
+				System.out.println(line);
+				line = br.readLine();
+			}
+
 
 		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			throw new IOException(e);
+		
 		}
 	}
 
@@ -155,8 +176,7 @@ public class FinalProj {
 
 		// Create the connection
 		Writer writer = null;
-		
-		
+
 		try {
 			writer = SequenceFile.createWriter(conf,
 					Writer.file(Globals.KmeansCenterPath()),
@@ -168,67 +188,77 @@ public class FinalProj {
 
 		for (canopyCenter canopyCenter : canopyCentres) {
 
-			int kmeansNumber = calcKmeansForCanopy(canopyCenter.getClusterSize(), stockCount);
+			int kmeansNumber = calcKmeansForCanopy(
+					canopyCenter.getClusterSize(), stockCount);
 
 			for (int i = 0; i < kmeansNumber; i++) {
 
-				KMeansCenter randomKmeans = 
-							GetRendomKmeanCenterByCanapoy(Globals.daysNumber,
-														  Globals.T1(),
-														  canopyCenter);
-				
-				// Giving name for the kmeans - this name used by the kmeans mapper
+				KMeansCenter randomKmeans = GetRendomKmeanCenterByCanapoy(
+						Globals.daysNumber, Globals.T1(), canopyCenter);
+
+				// Giving name for the kmeans - this name used by the kmeans
+				// mapper
 				randomKmeans.getCenter().setName(String.valueOf(i));
 
 				writer.append(canopyCenter, randomKmeans);
 			}
 		}
-		
+
 		// add the SequenceFile to the global
 		try {
-			DistributedCache.addCacheFile(Globals.KmeansCenterPath().toUri(), conf);
+			DistributedCache.addCacheFile(Globals.KmeansCenterPath().toUri(),
+					conf);
 		} catch (Exception e) {
-			System.out.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: " + Globals.KmeansCenterPath().toUri());
+			System.out
+					.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
+							+ Globals.KmeansCenterPath().toUri());
 			throw e;
 		}
-	
+
 	}
 
-	private static int calcKmeansForCanopy(double stocksPerCanopy, double stockCount) {
-		
+	private static int calcKmeansForCanopy(double stocksPerCanopy,
+			double stockCount) {
+
 		double propotion = stocksPerCanopy / stockCount;
-		
-		return (int) Math.round(Globals.kmeansCount * propotion); 
+
+		return (int) Math.round(Globals.kmeansCount * propotion);
 	}
 
+	private static KMeansCenter GetRendomKmeanCenterByCanapoy(int N, double R,
+			canopyCenter sphereCenter) {
 
-	private static KMeansCenter GetRendomKmeanCenterByCanapoy(int N, double R, canopyCenter sphereCenter ) {
-		
+		double U = Math.pow(StdRandom.gaussian(), 1 / N) * R;
 
-		double U = Math.pow(StdRandom.gaussian(), 1/N)*R;
-		
-	 	// create the vector
-	 	//DoubleWritable[][] tmp2DArray = new DoubleWritable[N][Globals.featuresNumber];
+		// create the vector
+		// DoubleWritable[][] tmp2DArray = new
+		// DoubleWritable[N][Globals.featuresNumber];
 		StockWritable randomVector = new StockWritable(sphereCenter.get());
-		
+
 		for (int currFeature = 0; currFeature < Globals.featuresNumber; currFeature++) {
-			
+
 			double sum = 0.0;
-			
+
 			// compute Euclidean norm of vector x[]
 			for (int day = 0; day < N; day++)
-		sum =+ Math.pow(((DoubleWritable)randomVector.get().get()[day][currFeature]).get(),2); 
+				sum = +Math
+						.pow(((DoubleWritable) randomVector.get().get()[day][currFeature])
+								.get(), 2);
 			sum = Math.sqrt(sum);
-			
+
 			// print scaled vector
 			for (int day = 0; day < N; day++)
-				((DoubleWritable)randomVector.get().get()[day][currFeature]).set(((DoubleWritable)randomVector.get().get()[day][currFeature]).get() * U / sum);
+				((DoubleWritable) randomVector.get().get()[day][currFeature])
+						.set(((DoubleWritable) randomVector.get().get()[day][currFeature])
+								.get() * U / sum);
 
 		}
-		
+
 		// check
-		System.out.println("GetRendomKmeanCenterByCanapoy (check)-> T1:" + Globals.T1() + " - dis: " + sphereCenter.get().distance(randomVector));
-		
-		return(new KMeansCenter(randomVector));
+		System.out.println("GetRendomKmeanCenterByCanapoy (check)-> T1:"
+				+ Globals.T1() + " - dis: "
+				+ sphereCenter.get().distance(randomVector));
+
+		return (new KMeansCenter(randomVector));
 	}
 }

@@ -8,7 +8,7 @@ public class Globals {
 	static int featuresNumber  =  0;
 	
 	public static double T1() {
-		return 0.5;
+		return 0.7;
 	}
 	
 	public static double T2() {
@@ -17,17 +17,27 @@ public class Globals {
 	
 	public static Path CanopyCenterPath()
 	{
-		return new Path("/home/training/workspace/FinalProj/data/SequenceFile.canopyCenters");
+		return new Path("./data/SequenceFile.canopyCenters");
+	}
+	
+	public static Path InputFolder()
+	{
+		return new Path("./input/input");
+	}
+	
+	public static Path OutputFolder()
+	{
+		return new Path("./output/Canopy");
 	}
 	
 	public static Path KmeansCenterPath()
 	{
-		return new Path("/home/training/workspace/FinalProj/data/SequenceFile.kmeansCenters");
+		return new Path("./data/SequenceFile.kmeansCenters");
 	}
 	
 	public static Path UserConfigFilePath()
 	{
-		return new Path("");
+		return new Path("./data/userConfigFile.config");
 	}
 	
 	public static int getKmeansCount()

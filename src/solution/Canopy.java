@@ -116,7 +116,7 @@ public static class canopyReducer
 	 try {
 		 writer = 
 				 SequenceFile
-				 .createWriter(conf,Writer.file(new Path("/home/training/workspace/FinalProj/data/SequenceFile.canopyCenters")),
+				 .createWriter(conf,Writer.file(Globals.CanopyCenterPath()),
 	                             Writer.keyClass(Text.class),
 	                             Writer.valueClass(canopyCenter.class));
 	 }
