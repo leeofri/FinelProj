@@ -34,9 +34,6 @@ public class Canopy {
 	public static class canopyMapper extends
 			Mapper<LongWritable, Text, IntWritable, canopyCenter> {
 
-		// TODO: put T1,T2 to global cash
-		private double T1 = 5;
-		private double T2 = 0;
 		private List<canopyCenter> mapperCanopyCenters;
 
 		public void setup(Context context) throws IOException,
@@ -70,7 +67,7 @@ public class Canopy {
 
 			// run on lape of canopy on the current stack
 			int result = canopyPointCheck(currStock, this.mapperCanopyCenters,
-					T1, T2);
+					Globals.T1(), Globals.T2());
 
 			// increase the counter
 			if (result >= 0) {
@@ -98,16 +95,18 @@ public class Canopy {
 				Context context) throws IOException, InterruptedException {
 			// init the centers list
 			ArrayList<canopyCenter> mapperCanopyCenters = new ArrayList<canopyCenter>();
-
+			
 			// Run on all the "local" mappers centers and preform canopy
 			// algoritem for custring
 			for (canopyCenter localCenter : values) {
-				// TODO: change the T1 & T2
 				int result = canopyPointCheck(localCenter.get(),
 						mapperCanopyCenters, 5, 0);
 				if (result >= 0) {
 					mapperCanopyCenters.get(result).increasCounter(
 							localCenter.getClusterSize());
+				}else if (result == -1)
+				{
+					mapperCanopyCenters.get(mapperCanopyCenters.size()-1).increasCounter(localCenter.getClusterSize() -1);
 				}
 			}
 
@@ -129,40 +128,53 @@ public class Canopy {
 				writer.append(globalCenter.get().getName(), globalCenter);
 
 			}
+			
+			writer.close();
 		}
 	}
 
 	// chech if the stock is center
-	// if in T1 return center index in list
-	// if in T2 return -2
+	// if in Globals.T1() return center index in list
+	// if in Globals.T2() return -2
 	// if stock is center return -1
 	private static int canopyPointCheck(StockWritable currStock,
 			List<canopyCenter> centers, double T1, double T2) {
-		// check if in on of the T1
+		// check if in on of the Globals.T1()
 		int centersIndex = 0;
 		double distance = 0;
 
 		if (centers.size() != 0) {
 			// Run on all the centers
 			do {
-				distance = currStock.distance(centers.get(centersIndex).get());
+				distance = currStock.distance(centers.get(centersIndex).get());	
 				centersIndex++;
 			} while ((centersIndex < centers.size()) && (distance > T1));
+			
+			//return the index to the distance comper state
+			centersIndex--;
+			
+			// debug
+			System.out.println("canopyPointCheck - currstack :" + currStock.getName() + " distance: " + distance );
+			
+			// Check if didnt found a match
+			if (distance > T1 && centersIndex == centers.size()-1) {
+				// dont found a relevent center for the current stock, add the stoce
+				// to the center point list
+				centers.add(new canopyCenter(currStock));
+				return -1;
+				// Check if the point isnt in Globals.T2() for increase the cluster counter
+			} else if (distance < T2) {
+				// inform the the point is in Globals.T2()
+				return -2;
+			}
 
-		}
-
-		// Check if found a match
-		if (centersIndex == centers.size()) {
-			// dont found a relevent center for the current stock, add the stoce
-			// to the center point list
+			return centersIndex;
+		}else
+		{
+			// add the first center
 			centers.add(new canopyCenter(currStock));
 			return -1;
-			// Check if the point isnt in T2 for increase the cluster counter
-		} else if (distance > T2) {
-			// inform the the point is in T2
-			return -2;
 		}
-
-		return centersIndex;
+		
 	}
 }

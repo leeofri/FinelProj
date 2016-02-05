@@ -64,43 +64,41 @@ public class FinalProj {
 		// FileInputFormat.addInputPath(job, new Path(args[0]));
 
 		// debug localhost
-		FileOutputFormat.setOutputPath(job, Globals.OutputFolder());
+		FileOutputFormat.setOutputPath(job, Globals.OutputFolderCanopy());
 		FileInputFormat.addInputPath(job, Globals.InputFolder());
 		
 		// TODO : lee delete debug 
 	    IsDeleteUtputFolder(true);
 		
-		System.exit(job.waitForCompletion(true) ? 0 : 1);
+	    // run canopy
+		job.waitForCompletion(true);
 		
 		// Kmeans
 		Job kmeansJob = Job.getInstance(conf, "FinelProj.KMeans");
-		job.setJarByClass(FinalProj.class);
-		job.setMapperClass(KMeansMapper.class);
-		job.setReducerClass(KMeansReducer.class);
-		job.setOutputKeyClass(canopyCenter.class);
-		job.setOutputValueClass(Text.class);
-		job.setMapOutputKeyClass(IntWritable.class);
-		job.setMapOutputValueClass(canopyCenter.class);
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		kmeansJob.setJarByClass(FinalProj.class);
+		kmeansJob.setMapperClass(KMeansMapper.class);
+		kmeansJob.setReducerClass(KMeansReducer.class);
+		kmeansJob.setOutputKeyClass(canopyCenter.class);
+		kmeansJob.setOutputValueClass(Text.class);
+		kmeansJob.setMapOutputKeyClass(IntWritable.class);
+		kmeansJob.setMapOutputValueClass(canopyCenter.class);
+		kmeansJob.setOutputFormatClass(SequenceFileOutputFormat.class);
 
 		// Adding the canopy centers and the kmeans centres to the cache
 		// kmeans get the canopy centers from SequenceFile
-
 		InitKmeansJobSequenceFile(conf);
 
 		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		// FileInputFormat.addInputPath(job, new Path(args[0]));
 
 		// debug localhost
-		FileOutputFormat.setOutputPath(job, new Path(
-				"/home/training/workspace/FinalProj/output/Canopy"));
-		FileInputFormat.addInputPath(job, new Path(
-				"/home/training/workspace/FinalProj/input"));
+		FileOutputFormat.setOutputPath(kmeansJob, Globals.OutputFolderKmeans());
+		FileInputFormat.addInputPath(kmeansJob, Globals.InputFolder());
 
 		// print the counter
 		// System.out.println("The amount of time we stept into the Reducer: " +
 		// job.getCounters().findCounter(MyCounters.Counter).getValue());
-		System.exit(job.waitForCompletion(true) ? 0 : 1);
+		kmeansJob.waitForCompletion(true);
 	}
 
 	private static void IsDeleteUtputFolder(Boolean indicate) {
@@ -109,6 +107,15 @@ public class FinalProj {
 			try {
 				File outputFolder = new File("output");
 				FileUtils.deleteDirectory(outputFolder);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			// Deleting the canopy seq file 
+			try {
+				File outputFolder = new File("data/SequenceFile.canopyCenters");
+				outputFolder.delete();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

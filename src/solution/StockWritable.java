@@ -51,7 +51,7 @@ public class StockWritable extends Configured implements Writable,
 	}
 
 	public StockWritable(StockWritable stock) {
-		this.stockName = stock.stockName;
+		this.stockName = new Text(stock.stockName);
 		this.stock = new TwoDArrayWritable(DoubleWritable.class, stock.get()
 				.get());
 	}
