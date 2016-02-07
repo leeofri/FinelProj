@@ -37,7 +37,9 @@ import solution.Canopy.canopyMapper;
 import solution.Canopy.canopyReducer;
 
 public class FinalProj {
-
+	
+	private static int usedKmeans = 0;
+	
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
 
@@ -228,8 +230,25 @@ public class FinalProj {
 			double stockCount) {
 
 		double propotion = stocksPerCanopy / stockCount;
-
-		return (int) Math.round(Globals.kmeansCount * propotion);
+		
+		// Is first canopy
+		if (usedKmeans == 0) {
+			// In case that is 0
+			if ((int) Math.floor(Globals.kmeansCount * propotion) == 0) {
+				usedKmeans = 1;
+				return 1;
+			}
+			else {
+				usedKmeans = (int) Math.round(Globals.kmeansCount * propotion);
+				
+				return usedKmeans;
+			}	
+		}
+		else {
+			int temp = usedKmeans;
+			usedKmeans = 0;
+			return Globals.kmeansCount - temp;
+		}
 	}
 
 	private static KMeansCenter GetRendomKmeanCenterByCanapoy(int N, double R,
