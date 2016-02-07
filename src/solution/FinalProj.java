@@ -248,9 +248,12 @@ public class FinalProj {
 
 			// compute Euclidean norm of vector x[]
 			for (int day = 0; day < N; day++)
+			{
 				sum = +Math
 						.pow(((DoubleWritable) randomVector.get().get()[day][currFeature])
 								.get(), 2);
+			}
+			
 			sum = Math.sqrt(sum);
 
 			// print scaled vector
