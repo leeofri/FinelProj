@@ -8,7 +8,7 @@ public class Globals {
 	static int featuresNumber  =  0;
 	
 	public static double T1() {
-		return 0.7;
+		return 29.1;
 	}
 	
 	public static double T2() {
@@ -27,7 +27,18 @@ public class Globals {
 	
 	public static Path OutputFolder()
 	{
-		return new Path("./output/Canopy");
+		return new Path("./output");
+	}
+	
+	
+	public static Path OutputFolderCanopy()
+	{
+		return new Path(Globals.OutputFolder()+"/Canopy");
+	}
+	
+	public static Path OutputFolderKmeans()
+	{
+		return new Path(Globals.OutputFolder()+"/Kmeans");
 	}
 	
 	public static Path KmeansCenterPath()
