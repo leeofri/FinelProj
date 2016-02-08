@@ -30,30 +30,33 @@ public class KMeansReducer extends
 			Context context) throws IOException, InterruptedException {
 
 		if (Globals.isLastReduce()) {
-			
+
 			for (StockWritable stock : values) {
-			 context.write(key.getCenter().getName(), stock.getName());
+				context.write(key.getCenter().getName(), stock.getName());
 			}
-			
+
 		} else {
-		}
 			// copy the old center
 			KMeansCenter newCenter = new KMeansCenter(key);
-			
+
 			// calc the new vector
 			// create the 2D array
 			DoubleWritable[][] tmp2DArray = new DoubleWritable[Globals.daysNumber][Globals.featuresNumber];
-			
+
 			for (StockWritable stock : values) {
 				for (int currDay = 1; currDay < Globals.daysNumber; currDay++) {
 					for (int currFeature = 1; currFeature < Globals.featuresNumber; currFeature++) {
-						tmp2DArray[currDay][currFeature].set(tmp2DArray[currDay][currFeature].get() + getFeatureInDay(stock, currDay, currFeature)); 			
+						tmp2DArray[currDay][currFeature]
+								.set(tmp2DArray[currDay][currFeature].get()
+										+ getFeatureInDay(stock, currDay,
+												currFeature));
 					}
 				}
-					
-			//init the stoce vector
+			}
+
+			// init the stoce vector
 			newCenter.getCenter().set(tmp2DArray);
-			
+
 			// write center to the file
 			Writer writer = null;
 
@@ -65,13 +68,13 @@ public class KMeansReducer extends
 			} catch (Exception e) {
 				throw new IOException(e);
 			}
-			
+
 			// write the new center
-			writer.append(newCenter.getRealatedCanopyCenter().get().getName(), newCenter);
-			
+			writer.append(newCenter.getRealatedCanopyCenter().get().getName(),
+					newCenter);
+
 			// close the writer
 			writer.close();
-			
 		}
 	}
 
@@ -81,11 +84,10 @@ public class KMeansReducer extends
 				.get();
 	}
 
-
 	@Override
 	protected void cleanup(Context context) throws IOException,
 			InterruptedException {
-		
+
 		// super.cleanup(context);
 		// Configuration conf = context.getConfiguration();
 		// Path outPath = new Path(conf.get("centroid.path"));
