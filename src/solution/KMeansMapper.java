@@ -89,11 +89,6 @@ public class KMeansMapper extends
 				nearestKmeans.getCenter().getName()), currStock);
 	}
 
-	private StockWritable GetStockFromLine(Text value) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 
 	private Text CreateKey(Text text, Text text2) {
 

@@ -44,26 +44,9 @@ public class Canopy {
 		@Override
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
-
-			// split the the line to name|days..
-			String[] data = value.toString().split("\\|");
-
-			// create the 2D array
-			DoubleWritable[][] tmp2DArray = new DoubleWritable[data.length - 1][];
-
-			// Run on all days the fist cell is the stack name
-			for (int day = 1; day < data.length; day++) {
-				String[] singleDaypParametrs = data[day].split(" ");
-				tmp2DArray[day - 1] = new DoubleWritable[singleDaypParametrs.length];
-				for (int paramter = 0; paramter < singleDaypParametrs.length; paramter++) {
-					tmp2DArray[day - 1][paramter] = new DoubleWritable(
-							Double.parseDouble(singleDaypParametrs[paramter]));
-				}
-			}
-
+			
 			// create the stock vector
-			StockWritable currStock = new StockWritable(tmp2DArray, new Text(
-					data[0]));
+			StockWritable currStock = Util.GetStockFromLine(value);
 
 			// run on lape of canopy on the current stack
 			int result = canopyPointCheck(currStock, this.mapperCanopyCenters,
