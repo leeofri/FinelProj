@@ -29,7 +29,7 @@ public class Util {
 				data[0]));
 	}
 	
-	public static KMeansCenter GetRendomKmeanCenterByCanapoy(double N, double R, double C,
+	public static KMeansCenter GetRendomKmeanCenterByCanapoy(double vectorRows, double vectorsCols, double Radios,
 			canopyCenter sphereCenter) {
 
 		// create the vector
@@ -37,12 +37,12 @@ public class Util {
 		// DoubleWritable[N][C];
 		StockWritable randomVector = new StockWritable(sphereCenter.get());
 
-		for (int currFeature = 0; currFeature < C; currFeature++) {
+		for (int currFeature = 0; currFeature < vectorsCols; currFeature++) {
 			
-			double U = StdRandom.uniform(-1.0, 1.0) * R / (N*C);
+			double U = StdRandom.uniform(-1.0, 1.0) * Radios / (vectorRows*vectorsCols);
 			
 			// print scaled vector
-			for (int day = 0; day < N; day++)
+			for (int day = 0; day < vectorRows; day++)
 				((DoubleWritable) randomVector.get().get()[day][currFeature])
 						.set(((DoubleWritable) randomVector.get().get()[day][currFeature])
 								.get() + U);

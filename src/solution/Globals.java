@@ -6,6 +6,7 @@ public class Globals {
 	static int kmeansCount = 0 ;
 	static int daysNumber = 0 ;
 	static int featuresNumber  =  0;
+	static boolean LastReduce = false;
 	
 	public static double T1() {
 		return 38;
@@ -80,6 +81,10 @@ public class Globals {
 	public static void setFeaturesNumber(int count)
 	{
 		featuresNumber  = count;
+	}
+	public static boolean isLastReduce()
+	{
+		return LastReduce;
 	}
 	
 }
