@@ -12,11 +12,12 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.TwoDArrayWritable;
+import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapreduce.Reducer;
 
 //calculate a new clustercenter for these vertices
 public class KMeansReducer extends
-		Reducer<Text, StockWritable, KMeansCenter, StockWritable> {
+		Reducer<KMeansCenter, StockWritable, Text, Text> {
 
 	public static enum Counter {
 		CONVERGED
@@ -25,51 +26,47 @@ public class KMeansReducer extends
 	List<KMeansCenter> centers = new LinkedList<KMeansCenter>();
 
 	@Override
-	protected void reduce(Text key, Iterable<StockWritable> values,
+	protected void reduce(KMeansCenter key, Iterable<StockWritable> values,
 			Context context) throws IOException, InterruptedException {
 
-		if (isLastReduce()) {
-
-			// KMeansCenter center = new KMeansCenter(newCenter);
-			//
-			// centers.add(center);
-			//
-			// for (StockWritable vector : vectorList) {
-			// context.write(center, vector);
-			// }
-			//
-			// if (center.converged(key))
-			// context.getCounter(Counter.CONVERGED).increment(1);
-		} else {
-			StockWritable newCenter;
-			List<StockWritable> stocks = new LinkedList<StockWritable>();
-
-			for (StockWritable value : values) {
-				stocks.add(new StockWritable(value));
+		if (Globals.isLastReduce()) {
+			
+			for (StockWritable stock : values) {
+			 context.write(key.getCenter().getName(), stock.getName());
 			}
-
-			// first stock
-			newCenter = stocks.get(0);
-
-			int days = newCenter.get().get().length;
-			int features = newCenter.get().get()[1].length;
-
-			for (int currStock = 1; currStock < stocks.size(); currStock++) {
-
-				for (int currDay = 1; currDay < days; currDay++) {
-
-					for (int currFeature = 1; currFeature < features; currFeature++) {
-
-						double value = getFeatureInDay(newCenter, currDay,currFeature)
-								+ getFeatureInDay(stocks.get(currStock), currDay, currFeature);
-
-						DoubleWritable temp = new DoubleWritable(value);
-
-						newCenter.get().get()[currDay][currFeature] = temp;
-
+			
+		} else {
+		}
+			// copy the old center
+			KMeansCenter newCenter = new KMeansCenter(key);
+			
+			// calc the new vector
+			// create the 2D array
+			DoubleWritable[][] tmp2DArray = new DoubleWritable[Globals.daysNumber][Globals.featuresNumber];
+			
+			for (StockWritable stock : values) {
+				for (int currDay = 1; currDay < Globals.daysNumber; currDay++) {
+					for (int currFeature = 1; currFeature < Globals.featuresNumber; currFeature++) {
+						tmp2DArray[currDay][currFeature].set(tmp2DArray[currDay][currFeature].get() + getFeatureInDay(stock, currDay, currFeature)); 			
 					}
 				}
+					
+			//init the stoce vector
+			newCenter.getCenter().set(tmp2DArray);
+			
+			// write center to the file
+			Writer writer = null;
+
+			try {
+				writer = SequenceFile.createWriter(context.getConfiguration(),
+						Writer.file(context.getLocalCacheFiles()[0]),
+						Writer.keyClass(Text.class),
+						Writer.valueClass(KMeansCenter.class));
+			} catch (Exception e) {
+				throw new IOException(e);
 			}
+			
+			
 		}
 	}
 
@@ -79,10 +76,6 @@ public class KMeansReducer extends
 				.get();
 	}
 
-	private boolean isLastReduce() {
-		// TODO : need to read from cahce
-		return false;
-	}
 
 	@Override
 	protected void cleanup(Context context) throws IOException,
