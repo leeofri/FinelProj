@@ -66,6 +66,11 @@ public class KMeansReducer extends
 				throw new IOException(e);
 			}
 			
+			// write the new center
+			writer.append(newCenter.getRealatedCanopyCenter().get().getName(), newCenter);
+			
+			// close the writer
+			writer.close();
 			
 		}
 	}
