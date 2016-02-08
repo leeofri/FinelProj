@@ -6,10 +6,12 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.TwoDArrayWritable;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.ipc.WritableRpcEngine;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class StockWritable extends Configured implements Writable,
 		Comparable<StockWritable> {
@@ -43,17 +45,32 @@ public class StockWritable extends Configured implements Writable,
 		this.set(new TwoDArrayWritable(DoubleWritable.class));
 	}
 
-	public StockWritable(DoubleWritable[][] v, Text name) {
+	public StockWritable(DoubleWritable[][] v, Text name)
+	{
+		this.StockWritable(v,name);
+	}
+	
+	private void StockWritable(Writable[][] v, Text name) {
 		this.stockName = new Text(name);
 
 		// create the stack vector
-		this.set(v);
+		// create the tmp 2D array
+		DoubleWritable[][] tmp2DArray = new DoubleWritable[v.length][];
+		
+	    for (int r = 0; r < v.length; r++) {
+	    	DoubleWritable[] tmpArray = new DoubleWritable[v[r].length];
+	    	for  (int c = 0; c < v[r].length; c++)
+	    		tmpArray[c] = new DoubleWritable(Double.parseDouble(v[r][c].toString()));
+	    	tmp2DArray[r] = tmpArray;
+	    }
+	    
+	    
+	    this.stock = new TwoDArrayWritable(DoubleWritable.class, tmp2DArray);
 	}
 
 	public StockWritable(StockWritable stock) {
-		this.stockName = new Text(stock.stockName);
-		this.stock = new TwoDArrayWritable(DoubleWritable.class, stock.get()
-				.get());
+		this.StockWritable((Writable[][])stock.stock.get(),stock.stockName);
+		
 	}
 
 	public int getDaysNumber() {

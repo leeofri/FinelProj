@@ -13,6 +13,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.SequenceFile.Reader;
@@ -20,18 +21,17 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 //first iteration, k-random centers, in every follow-up iteration we have new calculated centers
 public class KMeansMapper extends
-		Mapper<KMeansCenter, StockWritable, Text, StockWritable> {
+		Mapper<LongWritable, Text, Text, StockWritable> {
 
-	Hashtable<canopyCenter, List<KMeansCenter>> kmeansCenters = new Hashtable<canopyCenter, List<KMeansCenter>>();
+	private Hashtable<canopyCenter, List<KMeansCenter>> kmeansCenters = new Hashtable<canopyCenter, List<KMeansCenter>>();
 
 	@Override
 	protected void setup(Context context) throws IOException,
 			InterruptedException {
 
 		// Reading the canopy centers and the kmeans centers
-
 		// Getting all the paths
-		URI[] paths = context.getCacheFiles();
+		Path[] paths = context.getLocalCacheFiles();
 
 		// Reading the canopy centers and the kmeans centers from diserbuted
 		if (paths.length > 0) {
@@ -39,13 +39,77 @@ public class KMeansMapper extends
 		}
 	}
 
-	private void ReadingKmeans(Configuration conf,URI KmeansCentersURI) throws IOException {
+	
+	@Override
+	protected void map(LongWritable key, Text value, Context context)
+			throws IOException, InterruptedException {
+		
+		StockWritable currStock = GetStockFromLine(value);
+		
+		// Temp value distance that in the end will contain the lowest value
+		canopyCenter nearestCanopy = kmeansCenters.keys().nextElement();
+
+		double nearestCanopyDistance = Double.MAX_VALUE;
+
+		// TODO : LEE t2
+
+		// Running throw all the centers
+		for (canopyCenter currCanopy : kmeansCenters.keySet()) {
+
+			// Checking what is the distance between the centroid and the curr
+			// vector point
+			double dist = currCanopy.get().distance(currStock);
+
+			if (nearestCanopyDistance > dist) {
+
+				nearestCanopy = currCanopy;
+				nearestCanopyDistance = dist;
+			}
+		}
+		
+		KMeansCenter nearestKmeans = kmeansCenters.get(nearestCanopy).get(0);
+
+		double nearestKmeansDistance = Double.MAX_VALUE;
+		
+		// Running throw all the centers
+		for (KMeansCenter currKmean : kmeansCenters.get(nearestCanopy)) {
+
+			// Checking what is the distance between the centroid and the curr
+			// vector point
+			double dist = currKmean.getCenter().distance(currStock);
+
+			if (nearestKmeansDistance > dist) {
+
+				nearestKmeans = currKmean;
+				nearestKmeansDistance = dist;
+			}
+		}
+
+		context.write(CreateKey(nearestCanopy.get().getName(), 
+				nearestKmeans.getCenter().getName()), currStock);
+	}
+
+	private StockWritable GetStockFromLine(Text value) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	private Text CreateKey(Text text, Text text2) {
+
+		Text result = new Text(String.valueOf(text)
+				+ String.valueOf(text2));
+
+		return result;
+	}
+	
+	private void ReadingKmeans(Configuration conf,Path KmeansCentersPath) throws IOException {
 
 		// Reading from the sequence file
 		SequenceFile.Reader reader = null;
 
 		try {
-			reader = new SequenceFile.Reader(conf, Reader.file(new Path(KmeansCentersURI)));
+			reader = new SequenceFile.Reader(conf, Reader.file(KmeansCentersPath));
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
@@ -68,59 +132,5 @@ public class KMeansMapper extends
 
 	}
 
-	@Override
-	protected void map(KMeansCenter key, StockWritable value, Context context)
-			throws IOException, InterruptedException {
-
-		// Temp value distance that in the end will contain the lowest value
-		canopyCenter nearestCanopy = kmeansCenters.keys().nextElement();
-
-		double nearestCanopyDistance = Double.MAX_VALUE;
-
-		// TODO : LEE t2
-
-		// Running throw all the centers
-		for (canopyCenter currCanopy : kmeansCenters.keySet()) {
-
-			// Checking what is the distance between the centroid and the curr
-			// vector point
-			double dist = currCanopy.get().distance(value);
-
-			if (nearestCanopyDistance > dist) {
-
-				nearestCanopy = currCanopy;
-				nearestCanopyDistance = dist;
-			}
-		}
-		
-		KMeansCenter nearestKmeans = kmeansCenters.get(nearestCanopy).get(0);
-
-		double nearestKmeansDistance = Double.MAX_VALUE;
-		
-		// Running throw all the centers
-		for (KMeansCenter currKmean : kmeansCenters.get(nearestCanopy)) {
-
-			// Checking what is the distance between the centroid and the curr
-			// vector point
-			double dist = currKmean.getCenter().distance(value);
-
-			if (nearestKmeansDistance > dist) {
-
-				nearestKmeans = currKmean;
-				nearestKmeansDistance = dist;
-			}
-		}
-
-		context.write(CreateKey(nearestCanopy.get().getName(), 
-				nearestKmeans.getCenter().getName()), value);
-	}
-
-	private Text CreateKey(Text text, Text text2) {
-
-		Text result = new Text(String.valueOf(text)
-				+ String.valueOf(text2));
-
-		return result;
-	}
 
 }

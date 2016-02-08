@@ -18,8 +18,13 @@ public class canopyCenter  implements Writable,Comparable<canopyCenter>{
   private IntWritable pointsInCluster;
   private StockWritable clusterCenter;
   
-  public canopyCenter() {
-	  canopyCenter(1,new StockWritable());
+  public canopyCenter() 
+  { 
+	  this.pointsInCluster = new IntWritable(1);
+  
+	  // create the stack vector
+	  this.clusterCenter = new StockWritable();
+
   }
   
   private void canopyCenter(int amuntOfPoints, StockWritable center)

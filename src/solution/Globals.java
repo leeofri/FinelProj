@@ -8,7 +8,7 @@ public class Globals {
 	static int featuresNumber  =  0;
 	
 	public static double T1() {
-		return 29.1;
+		return 38;
 	}
 	
 	public static double T2() {

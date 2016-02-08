@@ -76,7 +76,13 @@ public class FinalProj {
 		job.waitForCompletion(true);
 		
 		// Kmeans
-		Job kmeansJob = Job.getInstance(conf, "FinelProj.KMeans");
+		Configuration Kmeansconf = new Configuration();
+		
+		// Adding the canopy centers and the kmeans centres to the cache
+		// kmeans get the canopy centers from SequenceFile
+		InitKmeansJobSequenceFile(Kmeansconf);
+		
+		Job kmeansJob = Job.getInstance(Kmeansconf, "FinelProj.KMeans");
 		kmeansJob.setJarByClass(FinalProj.class);
 		kmeansJob.setMapperClass(KMeansMapper.class);
 		kmeansJob.setReducerClass(KMeansReducer.class);
@@ -86,9 +92,7 @@ public class FinalProj {
 		kmeansJob.setMapOutputValueClass(canopyCenter.class);
 		kmeansJob.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-		// Adding the canopy centers and the kmeans centres to the cache
-		// kmeans get the canopy centers from SequenceFile
-		InitKmeansJobSequenceFile(conf);
+	
 
 		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		// FileInputFormat.addInputPath(job, new Path(args[0]));
@@ -212,11 +216,14 @@ public class FinalProj {
 				writer.append(canopyCenter, randomKmeans);
 			}
 		}
+		
+		// close the writer
+		writer.close();
 
 		// add the SequenceFile to the global
 		try {
-			DistributedCache.addCacheFile(Globals.KmeansCenterPath().toUri(),
-					conf);
+			DistributedCache.addCacheFile(Globals.KmeansCenterPath().toUri(),conf);
+			//DistributedCache.addLocalFiles(conf,Globals.KmeansCenterPath().toString());
 		} catch (Exception e) {
 			System.out
 					.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
@@ -251,10 +258,8 @@ public class FinalProj {
 		}
 	}
 
-	private static KMeansCenter GetRendomKmeanCenterByCanapoy(int N, double R,
+	private static KMeansCenter GetRendomKmeanCenterByCanapoy(double N, double R,
 			canopyCenter sphereCenter) {
-
-		double U = Math.pow(StdRandom.gaussian(), 1 / N) * R;
 
 		// create the vector
 		// DoubleWritable[][] tmp2DArray = new
@@ -262,24 +267,14 @@ public class FinalProj {
 		StockWritable randomVector = new StockWritable(sphereCenter.get());
 
 		for (int currFeature = 0; currFeature < Globals.featuresNumber; currFeature++) {
-
-			double sum = 0.0;
-
-			// compute Euclidean norm of vector x[]
-			for (int day = 0; day < N; day++)
-			{
-				sum = +Math
-						.pow(((DoubleWritable) randomVector.get().get()[day][currFeature])
-								.get(), 2);
-			}
 			
-			sum = Math.sqrt(sum);
-
+			double U = StdRandom.uniform(-1.0, 1.0) * R / (N*Globals.featuresNumber);
+			
 			// print scaled vector
 			for (int day = 0; day < N; day++)
 				((DoubleWritable) randomVector.get().get()[day][currFeature])
 						.set(((DoubleWritable) randomVector.get().get()[day][currFeature])
-								.get() * U / sum);
+								.get() + U);
 
 		}
 
