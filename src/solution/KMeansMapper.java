@@ -48,10 +48,16 @@ public class KMeansMapper extends
 		
 		// Temp value distance that in the end will contain the lowest value
 		canopyCenter nearestCanopy = kmeansCenters.keys().nextElement();
-
+		
+		// If the stock inside the t2 one of the canopies
+		// moving to next stock
+		if (Globals.T2() < getCanopyByIndex(0).get().distance(currStock) &&
+			Globals.T2() < getCanopyByIndex(1).get().distance(currStock))  {
+			
+		}
 		double nearestCanopyDistance = Double.MAX_VALUE;
 
-		// TODO : LEE t2
+		
 
 		// Running throw all the centers
 		for (canopyCenter currCanopy : kmeansCenters.keySet()) {
@@ -88,6 +94,11 @@ public class KMeansMapper extends
 		context.write(CreateKey(nearestCanopy.get().getName(), 
 				nearestKmeans.getCenter().getName()), currStock);
 	}
+
+	private canopyCenter getCanopyByIndex(int i) {
+		return (canopyCenter)kmeansCenters.keySet().toArray()[i];
+	}
+
 
 	private StockWritable GetStockFromLine(Text value) {
 		// TODO Auto-generated method stub
