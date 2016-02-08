@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -21,9 +22,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 //first iteration, k-random centers, in every follow-up iteration we have new calculated centers
 public class KMeansMapper extends
-		Mapper<LongWritable, Text, Text, StockWritable> {
+		Mapper<LongWritable, Text, KMeansCenter, StockWritable> {
 
-	private Hashtable<canopyCenter, List<KMeansCenter>> kmeansCenters = new Hashtable<canopyCenter, List<KMeansCenter>>();
+	private Hashtable<String, List<KMeansCenter>> kmeansCenters = new Hashtable<String, List<KMeansCenter>>();
 
 	@Override
 	protected void setup(Context context) throws IOException,
@@ -39,103 +40,80 @@ public class KMeansMapper extends
 		}
 	}
 
-	
 	@Override
 	protected void map(LongWritable key, Text value, Context context)
 			throws IOException, InterruptedException {
-		
+
 		StockWritable currStock = Util.GetStockFromLine(value);
-		
+
 		// Temp value distance that in the end will contain the lowest value
-		canopyCenter nearestCanopy = kmeansCenters.keys().nextElement();
-		
-		// If the stock inside the t2 one of the canopies
-		// moving to next stock
-		if (Globals.T2() < getCanopyByIndex(0).get().distance(currStock) &&
-			Globals.T2() < getCanopyByIndex(1).get().distance(currStock))  {
-			
-		}
-		double nearestCanopyDistance = Double.MAX_VALUE;
 
-		
+		canopyCenter nearestCanopy = null;
 
-		// Running throw all the centers
-		for (canopyCenter currCanopy : kmeansCenters.keySet()) {
+		KMeansCenter nearestKmeans = null;
 
-			// Checking what is the distance between the centroid and the curr
-			// vector point
-			double dist = currCanopy.get().distance(currStock);
+		for (String canopyName : kmeansCenters.keySet()) {
+			canopyCenter currCanopy = kmeansCenters.get(canopyName).get(0)
+					.getRealatedCanopyCenter();
 
-			if (nearestCanopyDistance > dist) {
+			if (Globals.T2() < currCanopy.get().distance(currStock)
+					&& Globals.T1() < currCanopy.get().distance(currStock)) {
+				for (KMeansCenter currKmean : kmeansCenters.get(canopyName)) {
 
-				nearestCanopy = currCanopy;
-				nearestCanopyDistance = dist;
+					double nearestKmeansDistance = Double.MAX_VALUE;
+
+					double dist = currKmean.getCenter().distance(currStock);
+
+					if (nearestKmeansDistance > dist) {
+						nearestKmeans = currKmean;
+						nearestKmeansDistance = dist;
+					}
+				}
+
+				context.write(nearestKmeans, currStock);
 			}
 		}
-		
-		KMeansCenter nearestKmeans = kmeansCenters.get(nearestCanopy).get(0);
-
-		double nearestKmeansDistance = Double.MAX_VALUE;
-		
-		// Running throw all the centers
-		for (KMeansCenter currKmean : kmeansCenters.get(nearestCanopy)) {
-
-			// Checking what is the distance between the centroid and the curr
-			// vector point
-			double dist = currKmean.getCenter().distance(currStock);
-
-			if (nearestKmeansDistance > dist) {
-
-				nearestKmeans = currKmean;
-				nearestKmeansDistance = dist;
-			}
-		}
-
-		context.write(CreateKey(nearestCanopy.get().getName(), 
-				nearestKmeans.getCenter().getName()), currStock);
 	}
-
-	private canopyCenter getCanopyByIndex(int i) {
-		return (canopyCenter)kmeansCenters.keySet().toArray()[i];
-	}
-
 
 	private Text CreateKey(Text text, Text text2) {
 
-		Text result = new Text(String.valueOf(text)
-				+ String.valueOf(text2));
+		Text result = new Text(String.valueOf(text) + String.valueOf(text2));
 
 		return result;
 	}
-	
-	private void ReadingKmeans(Configuration conf,Path KmeansCentersPath) throws IOException {
+
+	private void ReadingKmeans(Configuration conf, Path KmeansCentersPath)
+			throws IOException {
 
 		// Reading from the sequence file
 		SequenceFile.Reader reader = null;
 
 		try {
-			reader = new SequenceFile.Reader(conf, Reader.file(KmeansCentersPath));
+			reader = new SequenceFile.Reader(conf,
+					Reader.file(KmeansCentersPath));
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
 
-		canopyCenter key = new canopyCenter();
+		Text key = new Text();
 		KMeansCenter val = new KMeansCenter();
 
 		while (reader.next(key, val)) {
-			if (kmeansCenters.containsKey(key)) {
-				kmeansCenters.get(key).add(val);
+			if (kmeansCenters.containsKey(key.toString())) {
+				kmeansCenters.get(key.toString()).add(val);
 			} else {
 				List<KMeansCenter> kmeans = new ArrayList<KMeansCenter>();
 				kmeans.add(val);
-				kmeansCenters.put(key, kmeans);
+				kmeansCenters.put(key.toString(), kmeans);
 			}
+
+			val = new KMeansCenter();
+
 		}
-		
+
 		// close the reader
 		reader.close();
 
 	}
-
 
 }

@@ -87,9 +87,9 @@ public class FinalProj {
 		kmeansJob.setMapperClass(KMeansMapper.class);
 		kmeansJob.setReducerClass(KMeansReducer.class);
 		kmeansJob.setOutputKeyClass(canopyCenter.class);
-		kmeansJob.setOutputValueClass(Text.class);
-		kmeansJob.setMapOutputKeyClass(IntWritable.class);
-		kmeansJob.setMapOutputValueClass(canopyCenter.class);
+		kmeansJob.setOutputValueClass(StockWritable.class);
+		kmeansJob.setMapOutputKeyClass(KMeansCenter.class);
+		kmeansJob.setMapOutputValueClass(StockWritable.class);
 		kmeansJob.setOutputFormatClass(SequenceFileOutputFormat.class);
 
 	
@@ -185,6 +185,7 @@ public class FinalProj {
 		while (reader.next(key, val)) {
 			stockCount += val.getClusterSize();
 			canopyCentres.add(val);
+			val = new canopyCenter();
 		}
 
 		// Create the connection
@@ -193,7 +194,7 @@ public class FinalProj {
 		try {
 			writer = SequenceFile.createWriter(conf,
 					Writer.file(Globals.KmeansCenterPath()),
-					Writer.keyClass(canopyCenter.class),
+					Writer.keyClass(Text.class),
 					Writer.valueClass(KMeansCenter.class));
 		} catch (Exception e) {
 			throw new IOException(e);
@@ -212,8 +213,10 @@ public class FinalProj {
 				// Giving name for the kmeans - this name used by the kmeans
 				// mapper
 				randomKmeans.getCenter().setName(String.valueOf(i));
+				
+				randomKmeans.setRealatedCanopyCenter(canopyCenter);
 
-				writer.append(canopyCenter, randomKmeans);
+				writer.append(canopyCenter.get().getName(), randomKmeans);
 			}
 		}
 		

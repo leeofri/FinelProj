@@ -53,6 +53,7 @@ public class KMeansCenter implements WritableComparable<KMeansCenter> {
 	public void readFields(DataInput in) throws IOException {
 		this.center = new StockWritable();
 		center.readFields(in);
+		this.realatedCanopyCenter = new canopyCenter();
 		this.realatedCanopyCenter.readFields(in);
 	}
 
