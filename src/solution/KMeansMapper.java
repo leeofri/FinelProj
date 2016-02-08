@@ -44,7 +44,7 @@ public class KMeansMapper extends
 	protected void map(LongWritable key, Text value, Context context)
 			throws IOException, InterruptedException {
 		
-		StockWritable currStock = GetStockFromLine(value);
+		StockWritable currStock = Util.GetStockFromLine(value);
 		
 		// Temp value distance that in the end will contain the lowest value
 		canopyCenter nearestCanopy = kmeansCenters.keys().nextElement();
@@ -97,12 +97,6 @@ public class KMeansMapper extends
 
 	private canopyCenter getCanopyByIndex(int i) {
 		return (canopyCenter)kmeansCenters.keySet().toArray()[i];
-	}
-
-
-	private StockWritable GetStockFromLine(Text value) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 

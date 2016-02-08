@@ -205,9 +205,9 @@ public class FinalProj {
 					canopyCenter.getClusterSize(), stockCount);
 
 			for (int i = 0; i < kmeansNumber; i++) {
-
-				KMeansCenter randomKmeans = GetRendomKmeanCenterByCanapoy(
-						Globals.daysNumber, Globals.T1(), canopyCenter);
+					
+				KMeansCenter randomKmeans = Util.GetRendomKmeanCenterByCanapoy(
+						Globals.daysNumber,Globals.getFeaturesNumber(), Globals.T1(), canopyCenter);
 
 				// Giving name for the kmeans - this name used by the kmeans
 				// mapper
@@ -256,33 +256,5 @@ public class FinalProj {
 			usedKmeans = 0;
 			return Globals.kmeansCount - temp;
 		}
-	}
-
-	private static KMeansCenter GetRendomKmeanCenterByCanapoy(double N, double R,
-			canopyCenter sphereCenter) {
-
-		// create the vector
-		// DoubleWritable[][] tmp2DArray = new
-		// DoubleWritable[N][Globals.featuresNumber];
-		StockWritable randomVector = new StockWritable(sphereCenter.get());
-
-		for (int currFeature = 0; currFeature < Globals.featuresNumber; currFeature++) {
-			
-			double U = StdRandom.uniform(-1.0, 1.0) * R / (N*Globals.featuresNumber);
-			
-			// print scaled vector
-			for (int day = 0; day < N; day++)
-				((DoubleWritable) randomVector.get().get()[day][currFeature])
-						.set(((DoubleWritable) randomVector.get().get()[day][currFeature])
-								.get() + U);
-
-		}
-
-		// check
-		System.out.println("GetRendomKmeanCenterByCanapoy (check)-> T1:"
-				+ Globals.T1() + " - dis: "
-				+ sphereCenter.get().distance(randomVector));
-
-		return (new KMeansCenter(randomVector));
 	}
 }
