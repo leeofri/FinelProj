@@ -102,16 +102,11 @@ public class KMeansReducer extends
 		 fs.delete(outPath, true);
 		 
 		// write center to the file
-		Writer writer = null;
+		final Writer writer = SequenceFile.createWriter(context.getConfiguration(),
+				Writer.file(outPath),
+				Writer.keyClass(Text.class),
+				Writer.valueClass(KMeansCenter.class));
 
-		try {
-			writer = SequenceFile.createWriter(context.getConfiguration(),
-					Writer.file(new Path("data/lee.sq")),
-					Writer.keyClass(Text.class),
-					Writer.valueClass(KMeansCenter.class));
-		} catch (Exception e) {
-			throw new IOException(e);
-		}
 
 		// write the new centes
 		 for (KMeansCenter center : centers) {

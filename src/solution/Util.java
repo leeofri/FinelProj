@@ -117,7 +117,7 @@ public class Util {
 	public static boolean comperKMeansCenter(Hashtable<String,KMeansCenter> first, Hashtable<String,KMeansCenter> second){
 
 		// run on the hashtable and comper distances
-		for (String kmeansCenterName : first.keySet()) {
+		for (String kmeansCenterName : second.keySet()) {
 			
 			// debug
 			System.out.println("comperKMeansCenter - center:" + kmeansCenterName + " diffrence(distance):" + first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()));;

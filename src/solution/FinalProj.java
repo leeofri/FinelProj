@@ -93,11 +93,13 @@ public class FinalProj {
 			Job kmeansJob = kmeansJobConf(Kmeansconf, counter);
 			kmeansJob.waitForCompletion(true);
 			
-			// debug
-			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf));
 			
 			// get new centers
 			newKmeansCenters = Util.getKmeansCenterFromFile(Globals.KmeansCenterPath(), Kmeansconf);
+			
+			// debug
+			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
+						
 			counter++;
 		} while (Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
 		
