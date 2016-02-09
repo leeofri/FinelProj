@@ -117,11 +117,11 @@ public class FinalProj {
 		job.setJarByClass(FinalProj.class);
 		job.setMapperClass(KMeansMapper.class);
 		job.setReducerClass(KMeansReducer.class);
-		job.setOutputKeyClass(canopyCenter.class);
-		job.setOutputValueClass(StockWritable.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
 		job.setMapOutputKeyClass(KMeansCenter.class);
 		job.setMapOutputValueClass(StockWritable.class);
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		//job.setOutputFormatClass(SequenceFileOutputFormat.class);
 		
 		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		// FileInputFormat.addInputPath(job, new Path(args[0]));
@@ -283,6 +283,10 @@ public class FinalProj {
 			}
 			else {
 				usedKmeans = (int) Math.round(Globals.kmeansCount * propotion);
+				
+				if (usedKmeans == Globals.kmeansCount) {
+					usedKmeans = Globals.kmeansCount - 1;
+				}
 				
 				return usedKmeans;
 			}	
