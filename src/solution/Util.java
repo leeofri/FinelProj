@@ -6,8 +6,8 @@ import org.apache.hadoop.io.Text;
 import solution.ThirdParty.StdRandom;
 
 public class Util {
-	
-	public static  StockWritable GetStockFromLine(Text value) {
+
+	public static StockWritable GetStockFromLine(Text value) {
 		// split the the line to name|days..
 		String[] data = value.toString().split("\\|");
 
@@ -25,12 +25,11 @@ public class Util {
 		}
 
 		// create the stock vector
-		return new StockWritable(tmp2DArray, new Text(
-				data[0]));
+		return new StockWritable(tmp2DArray, new Text(data[0]));
 	}
-	
-	public static KMeansCenter GetRendomKmeanCenterByCanapoy(double vectorRows, double vectorsCols, double Radios,
-			canopyCenter sphereCenter) {
+
+	public static KMeansCenter GetRendomKmeanCenterByCanapoy(double vectorRows,
+			double vectorsCols, double Radios, canopyCenter sphereCenter) {
 
 		// create the vector
 		// DoubleWritable[][] tmp2DArray = new
@@ -38,9 +37,10 @@ public class Util {
 		StockWritable randomVector = new StockWritable(sphereCenter.get());
 
 		for (int currFeature = 0; currFeature < vectorsCols; currFeature++) {
-			
-			double U = StdRandom.uniform(-1.0, 1.0) * Radios / (vectorRows*vectorsCols);
-			
+
+			double U = StdRandom.uniform(-1.0, 1.0) * Radios
+					/ (vectorRows * vectorsCols);
+
 			// print scaled vector
 			for (int day = 0; day < vectorRows; day++)
 				((DoubleWritable) randomVector.get().get()[day][currFeature])
@@ -50,7 +50,8 @@ public class Util {
 		}
 
 		// check
-		System.out.println("GetRendomKmeanCenterByCanapoy (check)-> T1:"
+		System.out.println("GetRendomKmeanCenterByCanapoy (check)-> canopy :"
+				+ sphereCenter.get().getName().toString() + " T1:"
 				+ Globals.T1() + " - dis: "
 				+ sphereCenter.get().distance(randomVector));
 
