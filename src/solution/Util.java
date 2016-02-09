@@ -123,7 +123,7 @@ public class Util {
 			System.out.println("comperKMeansCenter - center:" + kmeansCenterName + " diffrence(distance):" + first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()));;
 			
 			// check the distance
-			if (first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()) > Globals.getKmeansZeroDistance())
+			if (first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()) <= Globals.getKmeansZeroDistance())
 			{
 				return false;
 			}	

@@ -29,9 +29,6 @@ public class KMeansReducer extends
 	protected void reduce(KMeansCenter key, Iterable<StockWritable> values,
 			Context context) throws IOException, InterruptedException {
 
-		// debug
-		System.out.println(key.getCenter().getName());
-		
 		if (Globals.isLastReduce()) {
 
 			for (StockWritable stock : values) {
@@ -79,24 +76,10 @@ public class KMeansReducer extends
 			// add the new stock vector to th new center
 			newCenter.getCenter().set(tmp2DArray);
 
-			// write center to the file
-			Writer writer = null;
-
-			try {
-				writer = SequenceFile.createWriter(context.getConfiguration(),
-						Writer.file(context.getLocalCacheFiles()[0]),
-						Writer.keyClass(Text.class),
-						Writer.valueClass(KMeansCenter.class));
-			} catch (Exception e) {
-				throw new IOException(e);
-			}
-
-			// write the new center
-			writer.append(newCenter.getRealatedCanopyCenter().get().getName(),
-					newCenter);
-
-			// close the writer
-			writer.close();
+			//debug
+			System.out.println("Kmeans reduce - distance (new-old):" + newCenter.getCenter().distance(key.getCenter()));
+			
+			centers.add(newCenter);
 		}
 	}
 
@@ -110,19 +93,34 @@ public class KMeansReducer extends
 	@Override
 	protected void cleanup(Context context) throws IOException,
 			InterruptedException {
+		 super.cleanup(context);
+		 
+		 // delete the old centers seq file
+		 Configuration conf = context.getConfiguration();
+		 Path outPath = Globals.KmeansCenterPath();
+		 FileSystem fs = FileSystem.get(conf);
+		 fs.delete(outPath, true);
+		 
+		// write center to the file
+		Writer writer = null;
 
-		// super.cleanup(context);
-		// Configuration conf = context.getConfiguration();
-		// Path outPath = new Path(conf.get("centroid.path"));
-		// FileSystem fs = FileSystem.get(conf);
-		// fs.delete(outPath, true);
-		// final SequenceFile.Writer out = SequenceFile.createWriter(fs,
-		// context.getConfiguration(), outPath, KMeansCenter.class,
-		// IntWritable.class);
-		// final IntWritable value = new IntWritable(0);
-		// for (KMeansCenter center : centers) {
-		// out.append(center, value);
-		// }
-		// out.close();
+		try {
+			writer = SequenceFile.createWriter(context.getConfiguration(),
+					Writer.file(new Path("data/lee.sq")),
+					Writer.keyClass(Text.class),
+					Writer.valueClass(KMeansCenter.class));
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+
+		// write the new centes
+		 for (KMeansCenter center : centers) {
+			// write the new center
+			writer.append(center.getRealatedCanopyCenter().get().getName(),
+						center);
+		 }
+		 
+		// close the writer
+		writer.close();
 	}
 }

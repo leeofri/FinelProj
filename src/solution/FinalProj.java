@@ -254,7 +254,7 @@ public class FinalProj {
 
 		// add the SequenceFile to the global
 		try {
-			DistributedCache.addCacheFile(Globals.KmeansCenterPath().toUri(),conf);
+			DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath().toString()),conf);
 			//DistributedCache.addLocalFiles(conf,Globals.KmeansCenterPath().toString());
 		} catch (Exception e) {
 			System.out
