@@ -45,7 +45,6 @@ public class KMeansMapper extends
 			throws IOException, InterruptedException {
 
 		StockWritable currStock = Util.GetStockFromLine(value);
-
 		// Temp value distance that in the end will contain the lowest value
 
 		canopyCenter nearestCanopy = null;

@@ -35,7 +35,7 @@ public class KMeansReducer extends
 		if (Globals.isLastReduce()) {
 
 			for (StockWritable stock : values) {
-				context.write(key.getCenter().getName(), stock.getName());
+				context.write(new Text(key.getRealatedCanopyCenter().get().getName() + key.getCenter().getName().toString()), stock.getName());
 			}
 
 		} else {
@@ -102,7 +102,7 @@ public class KMeansReducer extends
 
 	private double getFeatureInDay(StockWritable newCenter, int currDay,
 			int currFeature) {
-		System.out.println("getFeatureInDay - Name:"+ newCenter.getName() +" Day:" + currDay +" Feature: " + currFeature);
+		//System.out.println("getFeatureInDay - Name:"+ newCenter.getName() +" Day:" + currDay +" Feature: " + currFeature);
 		return ((DoubleWritable) newCenter.get().get()[currDay][currFeature])
 				.get();
 	}
