@@ -49,8 +49,9 @@ public class KMeansMapper extends
 		// Temp value distance that in the end will contain the lowest value
 
 		canopyCenter nearestCanopy = null;
-
+		double nearestKmeansDistance = Double.MAX_VALUE;
 		KMeansCenter nearestKmeans = null;
+		Boolean isFound = false;
 
 		for (String canopyName : kmeansCenters.keySet()) {
 			canopyCenter currCanopy = kmeansCenters.get(canopyName).get(0)
@@ -58,9 +59,8 @@ public class KMeansMapper extends
 
 			if (Globals.T2() <= currCanopy.get().distance(currStock)
 					&& Globals.T1() > currCanopy.get().distance(currStock)) {
-				for (KMeansCenter currKmean : kmeansCenters.get(canopyName)) {
 
-					double nearestKmeansDistance = Double.MAX_VALUE;
+				for (KMeansCenter currKmean : kmeansCenters.get(canopyName)) {
 
 					double dist = currKmean.getCenter().distance(currStock);
 
@@ -69,10 +69,21 @@ public class KMeansMapper extends
 						nearestKmeansDistance = dist;
 					}
 				}
+
+				System.out.println("Kmeans mapper - Kcenter:"
+						+ nearestKmeans.getCenter().getName() + ""
+						+ "   Canopy:" + canopyName);
 				
-				System.out.println("Kmeans mapper - Kcenter:" +  nearestKmeans.getCenter().getName() + "   Canopy:" + nearestKmeans.getRealatedCanopyCenter().get().getName());
 				context.write(nearestKmeans, currStock);
+				isFound = true;
+
 			}
+
+			if (isFound) {
+				// TODO : LEE
+				break;
+			}
+
 		}
 	}
 
