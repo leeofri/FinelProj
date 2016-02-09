@@ -37,9 +37,9 @@ public class Globals {
 		return new Path(Globals.OutputFolder()+"/Canopy");
 	}
 	
-	public static Path OutputFolderKmeans()
+	public static Path OutputFolderKmeans(int iteration)
 	{
-		return new Path(Globals.OutputFolder()+"/Kmeans");
+		return new Path(Globals.OutputFolder()+"/Kmeans"+iteration);
 	}
 	
 	public static Path KmeansCenterPath()
@@ -85,6 +85,14 @@ public class Globals {
 	public static boolean isLastReduce()
 	{
 		return LastReduce;
+	}
+	public static double getKmeansZeroDistance()
+	{
+		return 0.8;
+	}
+	public static void turnOnLastRunFlag()
+	{
+		LastReduce = true;
 	}
 	
 }

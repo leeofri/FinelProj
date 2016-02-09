@@ -1,7 +1,17 @@
 package solution;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.SequenceFile.Reader;
+import org.apache.hadoop.io.Writable;
 
 import solution.ThirdParty.StdRandom;
 
@@ -58,4 +68,67 @@ public class Util {
 		return (new KMeansCenter(randomVector));
 	}
 
+	public static int numberOfRowsInSeqFile(Path path, Configuration conf) throws IOException, InstantiationException, IllegalAccessException {
+
+		Reader reader = null;
+
+		try {
+			reader = new SequenceFile.Reader(conf, Reader.file(path));
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+
+		Writable key = (Writable) reader.getKeyClass().newInstance();
+		Writable val = (Writable) reader.getValueClass().newInstance();
+
+		int count = 0;
+		while (reader.next(key, val)) {
+			count++;
+		}
+		reader.close();
+		return count;
+	}
+
+	public static Hashtable<String,KMeansCenter> getKmeansCenterFromFile(Path path, Configuration conf) throws IOException, InstantiationException, IllegalAccessException {
+
+		Hashtable<String,KMeansCenter> fileKmeansCenters = new Hashtable<String, KMeansCenter>();
+		
+		Reader reader = null;
+
+		try {
+			reader = new SequenceFile.Reader(conf, Reader.file(path));
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+
+		Writable key = (Writable) reader.getKeyClass().newInstance();
+		KMeansCenter val =  new KMeansCenter();
+
+		int count = 0;
+		while (reader.next(key, val)) {
+			fileKmeansCenters.put(val.getRealatedCanopyCenter().get().getName() + val.getCenter().getName().toString(), val);
+			val =  new KMeansCenter();
+		}
+		
+		reader.close();
+		return fileKmeansCenters;
+	}
+	
+	public static boolean comperKMeansCenter(Hashtable<String,KMeansCenter> first, Hashtable<String,KMeansCenter> second){
+
+		// run on the hashtable and comper distances
+		for (String kmeansCenterName : first.keySet()) {
+			
+			// debug
+			System.out.println("comperKMeansCenter - center:" + kmeansCenterName + " diffrence(distance):" + first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()));;
+			
+			// check the distance
+			if (first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()) > Globals.getKmeansZeroDistance())
+			{
+				return false;
+			}	
+		}
+		
+		return true;
+	}
 }

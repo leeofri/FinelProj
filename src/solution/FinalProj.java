@@ -80,33 +80,56 @@ public class FinalProj {
 		
 		// Adding the canopy centers and the kmeans centres to the cache
 		// kmeans get the canopy centers from SequenceFile
-		InitKmeansJobSequenceFile(Kmeansconf);
+		Hashtable<String,KMeansCenter> oldKmeansCenters = InitKmeansJobSequenceFile(Kmeansconf);
+		Hashtable<String,KMeansCenter> newKmeansCenters = null;
 		
-		Job kmeansJob = Job.getInstance(Kmeansconf, "FinelProj.KMeans");
-		kmeansJob.setJarByClass(FinalProj.class);
-		kmeansJob.setMapperClass(KMeansMapper.class);
-		kmeansJob.setReducerClass(KMeansReducer.class);
-		kmeansJob.setOutputKeyClass(canopyCenter.class);
-		kmeansJob.setOutputValueClass(StockWritable.class);
-		kmeansJob.setMapOutputKeyClass(KMeansCenter.class);
-		kmeansJob.setMapOutputValueClass(StockWritable.class);
-		kmeansJob.setOutputFormatClass(SequenceFileOutputFormat.class);
-
 	
-
+		// print the counter
+		// System.out.println("The amount of time we stept into the Reducer: " +
+		// job.getCounters().findCounter(MyCounters.Counter).getValue());
+		int counter = 0;
+		do{
+			// job config
+			Job kmeansJob = kmeansJobConf(Kmeansconf, counter);
+			kmeansJob.waitForCompletion(true);
+			
+			// debug
+			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf));
+			
+			// get new centers
+			newKmeansCenters = Util.getKmeansCenterFromFile(Globals.KmeansCenterPath(), Kmeansconf);
+			counter++;
+		} while (Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
+		
+		// Last run for write output
+		Globals.turnOnLastRunFlag();
+		Job kmeansJob = kmeansJobConf(Kmeansconf, counter);
+		kmeansJob.waitForCompletion(true);
+		
+	}
+	
+	private static Job kmeansJobConf (Configuration Kmeansconf, int iteration) throws IOException
+	{
+		Job job = Job.getInstance(Kmeansconf, "FinelProj.KMeans"+iteration);
+		// the kmeans config
+		job.setJarByClass(FinalProj.class);
+		job.setMapperClass(KMeansMapper.class);
+		job.setReducerClass(KMeansReducer.class);
+		job.setOutputKeyClass(canopyCenter.class);
+		job.setOutputValueClass(StockWritable.class);
+		job.setMapOutputKeyClass(KMeansCenter.class);
+		job.setMapOutputValueClass(StockWritable.class);
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		
 		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		// FileInputFormat.addInputPath(job, new Path(args[0]));
 
 		// debug localhost
-		FileOutputFormat.setOutputPath(kmeansJob, Globals.OutputFolderKmeans());
-		FileInputFormat.addInputPath(kmeansJob, Globals.InputFolder());
-
-		// print the counter
-		// System.out.println("The amount of time we stept into the Reducer: " +
-		// job.getCounters().findCounter(MyCounters.Counter).getValue());
-		kmeansJob.waitForCompletion(true);
+		FileOutputFormat.setOutputPath(job, Globals.OutputFolderKmeans(iteration));
+		FileInputFormat.addInputPath(job, Globals.InputFolder());
 		
-		System.out.println("");
+		return job;
+
 	}
 
 	private static void IsDeleteUtputFolder(Boolean indicate) {
@@ -165,9 +188,10 @@ public class FinalProj {
 		}
 	}
 
-	private static void InitKmeansJobSequenceFile(Configuration conf)
+	private static Hashtable<String,KMeansCenter> InitKmeansJobSequenceFile(Configuration conf)
 			throws Exception {
 
+		Hashtable<String,KMeansCenter> randomKmeansCenters = new Hashtable<String, KMeansCenter>();
 		SequenceFile.Reader reader = null;
 
 		try {
@@ -219,6 +243,9 @@ public class FinalProj {
 				randomKmeans.setRealatedCanopyCenter(canopyCenter);
 
 				writer.append(canopyCenter.get().getName(), randomKmeans);
+				
+				// add to the returned list for comper in main
+				randomKmeansCenters.put(randomKmeans.getRealatedCanopyCenter().get().getName() + randomKmeans.getCenter().getName().toString(),randomKmeans);
 			}
 		}
 		
@@ -235,6 +262,8 @@ public class FinalProj {
 							+ Globals.KmeansCenterPath().toUri());
 			throw e;
 		}
+		
+		return randomKmeansCenters;
 
 	}
 
