@@ -29,6 +29,9 @@ public class KMeansReducer extends
 	protected void reduce(KMeansCenter key, Iterable<StockWritable> values,
 			Context context) throws IOException, InterruptedException {
 
+		// debug
+		System.out.println(key.getCenter().getName());
+		
 		if (Globals.isLastReduce()) {
 
 			for (StockWritable stock : values) {
@@ -43,9 +46,21 @@ public class KMeansReducer extends
 			// create the 2D array
 			DoubleWritable[][] tmp2DArray = new DoubleWritable[Globals.daysNumber][Globals.featuresNumber];
 
+			// init with 0
+			for (int currDay = 0; currDay < Globals.daysNumber; currDay++) {
+				for (int currFeature = 0; currFeature < Globals.featuresNumber; currFeature++) {
+					tmp2DArray[currDay][currFeature] = new DoubleWritable(0);
+				}
+			}
+
+			// stock counter
+			int stockCouter = 0;
+			
+			// sum all the elements
 			for (StockWritable stock : values) {
-				for (int currDay = 1; currDay < Globals.daysNumber; currDay++) {
-					for (int currFeature = 1; currFeature < Globals.featuresNumber; currFeature++) {
+				stockCouter++;
+				for (int currDay = 0; currDay < Globals.daysNumber; currDay++) {
+					for (int currFeature = 0; currFeature < Globals.featuresNumber; currFeature++) {
 						tmp2DArray[currDay][currFeature]
 								.set(tmp2DArray[currDay][currFeature].get()
 										+ getFeatureInDay(stock, currDay,
@@ -53,8 +68,15 @@ public class KMeansReducer extends
 					}
 				}
 			}
-
-			// init the stoce vector
+			
+			// divaiding
+			for (int currDay = 0; currDay < Globals.daysNumber; currDay++) {
+				for (int currFeature = 0; currFeature < Globals.featuresNumber; currFeature++) {
+					tmp2DArray[currDay][currFeature].set(tmp2DArray[currDay][currFeature].get()/stockCouter);
+				}
+			}
+			
+			// add the new stock vector to th new center
 			newCenter.getCenter().set(tmp2DArray);
 
 			// write center to the file
@@ -80,6 +102,7 @@ public class KMeansReducer extends
 
 	private double getFeatureInDay(StockWritable newCenter, int currDay,
 			int currFeature) {
+		System.out.println("getFeatureInDay - Name:"+ newCenter.getName() +" Day:" + currDay +" Feature: " + currFeature);
 		return ((DoubleWritable) newCenter.get().get()[currDay][currFeature])
 				.get();
 	}

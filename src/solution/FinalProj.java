@@ -105,6 +105,8 @@ public class FinalProj {
 		// System.out.println("The amount of time we stept into the Reducer: " +
 		// job.getCounters().findCounter(MyCounters.Counter).getValue());
 		kmeansJob.waitForCompletion(true);
+		
+		System.out.println("");
 	}
 
 	private static void IsDeleteUtputFolder(Boolean indicate) {

@@ -66,7 +66,7 @@ public class KMeansCenter implements WritableComparable<KMeansCenter> {
 		//check if ther is a canopycenter to the object
 		if (this.getRealatedCanopyCenter() != null && o.getRealatedCanopyCenter() != null)
 		{
-			result =+ this.getRealatedCanopyCenter().compareTo(o.getRealatedCanopyCenter());
+			result += this.getRealatedCanopyCenter().compareTo(o.getRealatedCanopyCenter());
 		}
 		
 		
