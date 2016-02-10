@@ -92,7 +92,7 @@ public class Util {
 		Reader reader = null;
 
 		try {
-			reader = new SequenceFile.Reader(conf, Reader.file(path));
+			reader = new SequenceFile.Reader( (FileSystem)FileSystem.getLocal(conf), path, conf);
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
