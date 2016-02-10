@@ -17,7 +17,7 @@ public class Globals {
 	
 	public static Path CanopyCenterPath()
 	{
-		return new Path("./data/SequenceFile.canopyCenters");
+		return new Path("./finalrun/data/SequenceFile.canopyCenters");
 	}
 	
 //	public static Path InputFolder()
@@ -47,12 +47,12 @@ public class Globals {
 	
 	public static Path KmeansCenterPath()
 	{
-		return new Path("./data/SequenceFile.kmeansCenters");
+		return new Path("./finalrun/data/SequenceFile.kmeansCenters");
 	}
 	
 	public static Path UserConfigFilePath()
 	{
-		return new Path("./data/userConfigFile.config");
+		return new Path("./finalrun/data/userConfigFile.config");
 	}
 	
 	public static int getKmeansCount()
