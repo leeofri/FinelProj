@@ -44,7 +44,7 @@ public class FinalProj {
 		Configuration conf = new Configuration();
 
 		// Reading from config file from the user
-		ReadingUserConfigFile();
+		ReadingUserConfigFile(args);
 
 		// Canopy
 		Job job = Job.getInstance(conf, "FinelProj.Canopy");
@@ -55,21 +55,15 @@ public class FinalProj {
 		job.setOutputValueClass(Text.class);
 		job.setMapOutputKeyClass(IntWritable.class);
 		job.setMapOutputValueClass(canopyCenter.class);
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
-
-		// Global cache
-		// DistributedCache.addCacheFile((new
-		// Path("/home/training/workspace/FinalProj/data/job.config")).toUri(),
-		// job.getConfiguration());
 
 		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		// FileInputFormat.addInputPath(job, new Path(args[0]));
 
 		// debug localhost
 		FileOutputFormat.setOutputPath(job, Globals.OutputFolderCanopy());
-		FileInputFormat.addInputPath(job, Globals.InputFolder());
+		FileInputFormat.addInputPath(job, new Path(args[0]));
 		
-		// TODO : lee delete debug 
+		// delete the privies run output
 	    IsDeleteUtputFolder(true);
 		
 	    // run canopy
@@ -80,37 +74,34 @@ public class FinalProj {
 		
 		// Adding the canopy centers and the kmeans centres to the cache
 		// kmeans get the canopy centers from SequenceFile
-		Hashtable<String,KMeansCenter> oldKmeansCenters = InitKmeansJobSequenceFile(Kmeansconf);
-		Hashtable<String,KMeansCenter> newKmeansCenters = null;
+		Hashtable<String,KMeansCenter> oldKmeansCenters = null;
+		Hashtable<String,KMeansCenter> newKmeansCenters = InitKmeansJobSequenceFile(Kmeansconf);
 		
 	
-		// print the counter
-		// System.out.println("The amount of time we stept into the Reducer: " +
-		// job.getCounters().findCounter(MyCounters.Counter).getValue());
-		int counter = 0;
+		int counter = 1;
 		do{
 			// job config
-			Job kmeansJob = kmeansJobConf(Kmeansconf, counter);
+			Job kmeansJob = kmeansJobConf(Kmeansconf, counter, args);
 			kmeansJob.waitForCompletion(true);
 			
-			
 			// get new centers
+			oldKmeansCenters = newKmeansCenters;
 			newKmeansCenters = Util.getKmeansCenterFromFile(Globals.KmeansCenterPath(), Kmeansconf);
 			
 			// debug
 			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
-						
+			
 			counter++;
 		} while (Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
 		
 		// Last run for write output
 		Globals.turnOnLastRunFlag();
-		Job kmeansJob = kmeansJobConf(Kmeansconf, counter);
+		Job kmeansJob = kmeansJobConf(Kmeansconf, 0, args);
 		kmeansJob.waitForCompletion(true);
 		
 	}
 	
-	private static Job kmeansJobConf (Configuration Kmeansconf, int iteration) throws IOException
+	private static Job kmeansJobConf (Configuration Kmeansconf, int iteration, String[] args) throws IOException
 	{
 		Job job = Job.getInstance(Kmeansconf, "FinelProj.KMeans"+iteration);
 		// the kmeans config
@@ -121,14 +112,13 @@ public class FinalProj {
 		job.setOutputValueClass(Text.class);
 		job.setMapOutputKeyClass(KMeansCenter.class);
 		job.setMapOutputValueClass(StockWritable.class);
-		//job.setOutputFormatClass(SequenceFileOutputFormat.class);
 		
 		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
-		// FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileInputFormat.addInputPath(job, new Path(args[0]));
 
 		// debug localhost
 		FileOutputFormat.setOutputPath(job, Globals.OutputFolderKmeans(iteration));
-		FileInputFormat.addInputPath(job, Globals.InputFolder());
+		//FileInputFormat.addInputPath(job, Globals.InputFolder());
 		
 		return job;
 
@@ -156,7 +146,7 @@ public class FinalProj {
 		}
 	}
 
-	private static void ReadingUserConfigFile() throws IOException {
+	private static void ReadingUserConfigFile(String[] arg) throws IOException {
 		try {
 			Path pt = Globals.UserConfigFilePath();
 			FileSystem fs = FileSystem.get(new Configuration());
@@ -168,17 +158,18 @@ public class FinalProj {
 
 			String[] values = line.split(" ");
 
-			// TODO : LEE reflecation 
 			Globals.setKmeansCount(Integer.parseInt(values[1]));
 			Globals.setDaysNumber(Integer.parseInt(values[3]));
 			Globals.setFeaturesNumber(Integer.parseInt(values[5]));
+			
+			// set the basic output path
+			Globals.setOutputFolder(arg[1]);
 			
 			// spilits parameter
 			String filedType;
 			String val = "";
 			
 			while (line != null) {
-				System.out.println(line);
 				line = br.readLine();
 			}
 
@@ -250,6 +241,8 @@ public class FinalProj {
 				randomKmeansCenters.put(randomKmeans.getRealatedCanopyCenter().get().getName() + randomKmeans.getCenter().getName().toString(),randomKmeans);
 			}
 		}
+		// debug
+		System.out.println("InitKmeansJobSequenceFile - Number of K centers:"+randomKmeansCenters.size());
 		
 		// close the writer
 		writer.close();
@@ -257,7 +250,7 @@ public class FinalProj {
 		// add the SequenceFile to the global
 		try {
 			DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath().toString()),conf);
-			//DistributedCache.addLocalFiles(conf,Globals.KmeansCenterPath().toString());
+		
 		} catch (Exception e) {
 			System.out
 					.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "

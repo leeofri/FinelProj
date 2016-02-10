@@ -59,11 +59,6 @@ public class Util {
 
 		}
 
-		// check
-		System.out.println("GetRendomKmeanCenterByCanapoy (check)-> canopy :"
-				+ sphereCenter.get().getName().toString() + " T1:"
-				+ Globals.T1() + " - dis: "
-				+ sphereCenter.get().distance(randomVector));
 
 		return (new KMeansCenter(randomVector));
 	}
@@ -115,20 +110,59 @@ public class Util {
 	}
 	
 	public static boolean comperKMeansCenter(Hashtable<String,KMeansCenter> first, Hashtable<String,KMeansCenter> second){
-
+		
 		// run on the hashtable and comper distances
 		for (String kmeansCenterName : second.keySet()) {
 			
 			// debug
-			System.out.println("comperKMeansCenter - center:" + kmeansCenterName + " diffrence(distance):" + first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()));;
+			System.out.println("comperKMeansCenter - center:" + kmeansCenterName + " diffrence(distance):" + first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()));			
 			
 			// check the distance
-			if (first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()) <= Globals.getKmeansZeroDistance())
+			if (first.get(kmeansCenterName).getCenter().distance(second.get(kmeansCenterName).getCenter()) > Globals.getKmeansZeroDistance())
 			{
-				return false;
+				return true;
 			}	
 		}
 		
-		return true;
+		return false;
+	}
+	
+	public static Hashtable<String, List<KMeansCenter>> ReadingKmeans(Configuration conf, Path KmeansCentersPath)
+			throws IOException {
+
+		// Creat the result objecy
+		Hashtable<String, List<KMeansCenter>> kmeansFromFile = new Hashtable<String, List<KMeansCenter>>(); 
+		
+		// Reading from the sequence file
+		SequenceFile.Reader reader = null;
+
+		try {
+			reader = new SequenceFile.Reader(conf,
+					Reader.file(KmeansCentersPath));
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+
+		Text key = new Text();
+		KMeansCenter val = new KMeansCenter();
+
+		while (reader.next(key, val)) {
+			if (kmeansFromFile.containsKey(key.toString())) {
+				kmeansFromFile.get(key.toString()).add(val);
+			} else {
+				List<KMeansCenter> kmeans = new ArrayList<KMeansCenter>();
+				kmeans.add(val);
+				kmeansFromFile.put(key.toString(), kmeans);
+			}
+
+			val = new KMeansCenter();
+
+		}
+
+		// close the reader
+		reader.close();
+		
+		return kmeansFromFile;
+
 	}
 }

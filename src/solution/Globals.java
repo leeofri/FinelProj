@@ -1,15 +1,14 @@
-package solution;
-
-import org.apache.hadoop.fs.Path;
+package solution;import org.apache.hadoop.fs.Path;
 
 public class Globals {
 	static int kmeansCount = 0 ;
 	static int daysNumber = 0 ;
 	static int featuresNumber  =  0;
 	static boolean LastReduce = false;
+	static String outputFolder = "./output";
 	
 	public static double T1() {
-		return 38;
+		return 29.95;
 	}
 	
 	public static double T2() {
@@ -18,38 +17,42 @@ public class Globals {
 	
 	public static Path CanopyCenterPath()
 	{
-		return new Path("./data/SequenceFile.canopyCenters");
+		return new Path("./finalrun/data/SequenceFile.canopyCenters");
 	}
 	
-	public static Path InputFolder()
+//	public static Path InputFolder()
+//	{
+//		return new Path("./input/input");
+//	}
+	
+	public static Path getOutputFolder()
 	{
-		return new Path("./input/input");
+		return new Path(outputFolder);
 	}
 	
-	public static Path OutputFolder()
+	public static void setOutputFolder(String outputPath)
 	{
-		return new Path("./output");
+		outputFolder = outputPath;
 	}
-	
 	
 	public static Path OutputFolderCanopy()
 	{
-		return new Path(Globals.OutputFolder()+"/Canopy");
+		return new Path(Globals.getOutputFolder()+"/Canopy");
 	}
 	
 	public static Path OutputFolderKmeans(int iteration)
 	{
-		return new Path(Globals.OutputFolder()+"/Kmeans"+iteration);
+		return new Path(Globals.getOutputFolder()+"/Kmeans"+iteration);
 	}
 	
 	public static Path KmeansCenterPath()
 	{
-		return new Path("./data/SequenceFile.kmeansCenters");
+		return new Path("./finalrun/data/SequenceFile.kmeansCenters");
 	}
 	
 	public static Path UserConfigFilePath()
 	{
-		return new Path("./data/userConfigFile.config");
+		return new Path("./finalrun/data/userConfigFile.config");
 	}
 	
 	public static int getKmeansCount()

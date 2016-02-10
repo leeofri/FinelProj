@@ -24,8 +24,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 public class KMeansMapper extends
 		Mapper<LongWritable, Text, KMeansCenter, StockWritable> {
 
-	private Hashtable<String, List<KMeansCenter>> kmeansCenters = new Hashtable<String, List<KMeansCenter>>();
-
+	private Hashtable<String, List<KMeansCenter>> kmeansCenters; 
 	@Override
 	protected void setup(Context context) throws IOException,
 			InterruptedException {
@@ -36,7 +35,7 @@ public class KMeansMapper extends
 
 		// Reading the canopy centers and the kmeans centers from diserbuted
 		if (paths.length > 0) {
-			ReadingKmeans(context.getConfiguration(), paths[0]);
+			kmeansCenters = Util.ReadingKmeans(context.getConfiguration(), paths[0]);
 		}
 	}
 
@@ -68,18 +67,14 @@ public class KMeansMapper extends
 						nearestKmeansDistance = dist;
 					}
 				}
-
-				System.out.println("Kmeans mapper - Kcenter:"
-						+ nearestKmeans.getCenter().getName() + ""
-						+ "   Canopy:" + canopyName);
 				
+				// write to output
 				context.write(nearestKmeans, currStock);
 				isFound = true;
 
 			}
 
 			if (isFound) {
-				// TODO : LEE
 				break;
 			}
 
@@ -91,40 +86,6 @@ public class KMeansMapper extends
 		Text result = new Text(String.valueOf(text) + String.valueOf(text2));
 
 		return result;
-	}
-
-	private void ReadingKmeans(Configuration conf, Path KmeansCentersPath)
-			throws IOException {
-
-		// Reading from the sequence file
-		SequenceFile.Reader reader = null;
-
-		try {
-			reader = new SequenceFile.Reader(conf,
-					Reader.file(KmeansCentersPath));
-		} catch (Exception e) {
-			throw new IOException(e);
-		}
-
-		Text key = new Text();
-		KMeansCenter val = new KMeansCenter();
-
-		while (reader.next(key, val)) {
-			if (kmeansCenters.containsKey(key.toString())) {
-				kmeansCenters.get(key.toString()).add(val);
-			} else {
-				List<KMeansCenter> kmeans = new ArrayList<KMeansCenter>();
-				kmeans.add(val);
-				kmeansCenters.put(key.toString(), kmeans);
-			}
-
-			val = new KMeansCenter();
-
-		}
-
-		// close the reader
-		reader.close();
-
 	}
 
 }
