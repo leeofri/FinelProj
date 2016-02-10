@@ -88,7 +88,6 @@ public class FinalProj {
 			try {
 				DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath()
 						.toString()), Kmeansconf);
-				// DistributedCache.addLocalFiles(conf,Globals.KmeansCenterPath().toString());
 			} catch (Exception e) {
 				System.out
 						.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
@@ -98,7 +97,7 @@ public class FinalProj {
 			
 			// get new centers
 			oldKmeansCenters = newKmeansCenters;
-			newKmeansCenters = Util.getKmeansCenterFromFile(DistributedCache.getLocalCacheFiles(Kmeansconf)[0], Kmeansconf);
+			newKmeansCenters = Util.getKmeansCenterFromFile(Globals.KmeansCenterPath(), Kmeansconf);
 			
 			// debug
 			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
