@@ -33,7 +33,10 @@ public class KMeansReducer extends
 		if (Globals.isLastReduce()) {
 
 			for (StockWritable stock : values) {
-				context.write(new Text(key.getRealatedCanopyCenter().get().getName() + key.getCenter().getName().toString()), stock.getName());
+				context.write(new Text(key.getRealatedCanopyCenter().get()
+						.getName()
+						+ key.getCenter().getName().toString()),
+						stock.getName());
 			}
 
 		} else {
@@ -53,7 +56,7 @@ public class KMeansReducer extends
 
 			// stock counter
 			int stockCouter = 0;
-			
+
 			// sum all the elements
 			for (StockWritable stock : values) {
 				stockCouter++;
@@ -66,14 +69,16 @@ public class KMeansReducer extends
 					}
 				}
 			}
-			
+
 			// divaiding
 			for (int currDay = 0; currDay < Globals.daysNumber; currDay++) {
 				for (int currFeature = 0; currFeature < Globals.featuresNumber; currFeature++) {
-					tmp2DArray[currDay][currFeature].set(tmp2DArray[currDay][currFeature].get()/stockCouter);
+					tmp2DArray[currDay][currFeature]
+							.set(tmp2DArray[currDay][currFeature].get()
+									/ stockCouter);
 				}
 			}
-			
+
 			// add the new stock vector to th new center
 			newCenter.getCenter().set(tmp2DArray);
 
@@ -90,58 +95,64 @@ public class KMeansReducer extends
 	@Override
 	protected void cleanup(Context context) throws IOException,
 			InterruptedException {
-		 super.cleanup(context);
-		 
-		 Configuration conf = context.getConfiguration();
-		 Path outPath = Globals.KmeansCenterPath();
-		 
-		 //get the old point
-		 Hashtable<String, List<KMeansCenter>> oldCenters = Util.ReadingKmeans(conf, context.getLocalCacheFiles()[0]);
-		 
-		 // delete the old centers seq file
-		
-		 FileSystem fs = FileSystem.get(conf);
-		 fs.delete(outPath, true);
-		 
-		// write center to the file
-		final Writer writer = SequenceFile.createWriter(context.getConfiguration(),
-				Writer.file(outPath),
-				Writer.keyClass(Text.class),
-				Writer.valueClass(KMeansCenter.class));
-		
-		 
-		 // write the new centers
-		 for (KMeansCenter center : centers) {
-			// write the new center
-			writer.append(center.getRealatedCanopyCenter().get().getName(),
-						center);
-			
-			// delete the beckup from old list
-			List<KMeansCenter> currKCenterCluster = oldCenters.get(center.getRealatedCanopyCenter().get().getName().toString());
-			
-			// delete the center from list
-			for (KMeansCenter currKCenter : currKCenterCluster) {
-				if (currKCenter.getCenter().getName().toString().equals(
-						center.getCenter().getName().toString()))
-				{
-					currKCenterCluster.remove(currKCenter);
-					break;
-				}	
-			}
-		 }
-		 
-		 // write old centers with k-cluster size 0, aka didnt sent from mapper to reducer 
-		 for (String currClustr : oldCenters.keySet() )
-		 {
-			// write the old remaining centers
-			 for (KMeansCenter center : oldCenters.get(currClustr)) {
-				 // write the old center
+		super.cleanup(context);
+
+		Configuration conf = context.getConfiguration();
+		Path outPath = Globals.KmeansCenterPath();
+
+		// get the old point
+		Hashtable<String, List<KMeansCenter>> oldCenters = Util.ReadingKmeans(
+				conf, context.getLocalCacheFiles()[0]);
+
+		// delete the old centers seq file
+
+		FileSystem fs = FileSystem.get(conf);
+		fs.delete(outPath, true);
+
+		try {
+
+			// write center to the file
+			final Writer writer = SequenceFile.createWriter(
+					context.getConfiguration(), Writer.file(outPath),
+					Writer.keyClass(Text.class),
+					Writer.valueClass(KMeansCenter.class));
+
+			// write the new centers
+			for (KMeansCenter center : centers) {
+				// write the new center
 				writer.append(center.getRealatedCanopyCenter().get().getName(),
-							center);
-			 }
-		 }
-		 
-		// close the writer
-		writer.close();
+						center);
+
+				// delete the beckup from old list
+				List<KMeansCenter> currKCenterCluster = oldCenters.get(center
+						.getRealatedCanopyCenter().get().getName().toString());
+
+				// delete the center from list
+				for (KMeansCenter currKCenter : currKCenterCluster) {
+					if (currKCenter.getCenter().getName().toString()
+							.equals(center.getCenter().getName().toString())) {
+						currKCenterCluster.remove(currKCenter);
+						break;
+					}
+				}
+			}
+
+			// write old centers with k-cluster size 0, aka didnt sent from
+			// mapper to reducer
+			for (String currClustr : oldCenters.keySet()) {
+				// write the old remaining centers
+				for (KMeansCenter center : oldCenters.get(currClustr)) {
+					// write the old center
+					writer.append(center.getRealatedCanopyCenter().get()
+							.getName(), center);
+				}
+			}
+
+			// close the writer
+			writer.close();
+		} catch (Exception e) {
+			System.out.println("Kmeans reducer - final Writer :"
+					+ e.getMessage());
+		}
 	}
 }
