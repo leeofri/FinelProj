@@ -96,7 +96,7 @@ public class KMeansReducer extends
 		 Path outPath = Globals.KmeansCenterPath();
 		 
 		 //get the old point
-		 Hashtable<String, List<KMeansCenter>> oldCenters = Util.ReadingKmeans(conf, outPath);
+		 Hashtable<String, List<KMeansCenter>> oldCenters = Util.ReadingKmeans(conf, context.getLocalCacheFiles()[0]);
 		 
 		 // delete the old centers seq file
 		
