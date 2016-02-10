@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import solution.ThirdParty.*;
+import solution.StdRandom;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.math.LongRange;
@@ -37,9 +37,9 @@ import solution.Canopy.canopyMapper;
 import solution.Canopy.canopyReducer;
 
 public class FinalProj {
-	
+
 	private static int usedKmeans = 0;
-	
+
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
 
@@ -68,10 +68,10 @@ public class FinalProj {
 		
 	    // run canopy
 		job.waitForCompletion(true);
-		
+
 		// Kmeans
 		Configuration Kmeansconf = new Configuration();
-		
+
 		// Adding the canopy centers and the kmeans centres to the cache
 		// kmeans get the canopy centers from SequenceFile
 		Hashtable<String,KMeansCenter> oldKmeansCenters = null;
@@ -91,19 +91,21 @@ public class FinalProj {
 			// debug
 			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
 			
+
 			counter++;
 		} while (Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
-		
+
 		// Last run for write output
 		Globals.turnOnLastRunFlag();
 		Job kmeansJob = kmeansJobConf(Kmeansconf, 0, args);
 		kmeansJob.waitForCompletion(true);
-		
+
 	}
-	
+
 	private static Job kmeansJobConf (Configuration Kmeansconf, int iteration, String[] args) throws IOException
 	{
 		Job job = Job.getInstance(Kmeansconf, "FinelProj.KMeans"+iteration);
+
 		// the kmeans config
 		job.setJarByClass(FinalProj.class);
 		job.setMapperClass(KMeansMapper.class);
@@ -112,11 +114,9 @@ public class FinalProj {
 		job.setOutputValueClass(Text.class);
 		job.setMapOutputKeyClass(KMeansCenter.class);
 		job.setMapOutputValueClass(StockWritable.class);
-		
+
 		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		FileInputFormat.addInputPath(job, new Path(args[0]));
-
-		// debug localhost
 		FileOutputFormat.setOutputPath(job, Globals.OutputFolderKmeans(iteration));
 		//FileInputFormat.addInputPath(job, Globals.InputFolder());
 		
@@ -134,8 +134,8 @@ public class FinalProj {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
-			// Deleting the canopy seq file 
+
+			// Deleting the canopy seq file
 			try {
 				File outputFolder = new File("data/SequenceFile.canopyCenters");
 				outputFolder.delete();
@@ -154,7 +154,6 @@ public class FinalProj {
 					fs.open(pt)));
 			String line;
 			line = br.readLine();
-			
 
 			String[] values = line.split(" ");
 
@@ -168,23 +167,22 @@ public class FinalProj {
 			// spilits parameter
 			String filedType;
 			String val = "";
-			
+
 			while (line != null) {
 				line = br.readLine();
 			}
 
-
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			throw new IOException(e);
-		
+
 		}
 	}
 
-	private static Hashtable<String,KMeansCenter> InitKmeansJobSequenceFile(Configuration conf)
-			throws Exception {
+	private static Hashtable<String, KMeansCenter> InitKmeansJobSequenceFile(
+			Configuration conf) throws Exception {
 
-		Hashtable<String,KMeansCenter> randomKmeansCenters = new Hashtable<String, KMeansCenter>();
+		Hashtable<String, KMeansCenter> randomKmeansCenters = new Hashtable<String, KMeansCenter>();
 		SequenceFile.Reader reader = null;
 
 		try {
@@ -225,39 +223,43 @@ public class FinalProj {
 					canopyCenter.getClusterSize(), stockCount);
 
 			for (int i = 0; i < kmeansNumber; i++) {
-					
+
 				KMeansCenter randomKmeans = Util.GetRendomKmeanCenterByCanapoy(
-						Globals.daysNumber,Globals.getFeaturesNumber(), Globals.T1(), canopyCenter);
+						Globals.daysNumber, Globals.getFeaturesNumber(),
+						Globals.T1(), canopyCenter);
 
 				// Giving name for the kmeans - this name used by the kmeans
 				// mapper
 				randomKmeans.getCenter().setName(String.valueOf(i));
-				
+
 				randomKmeans.setRealatedCanopyCenter(canopyCenter);
 
 				writer.append(canopyCenter.get().getName(), randomKmeans);
-				
+
 				// add to the returned list for comper in main
-				randomKmeansCenters.put(randomKmeans.getRealatedCanopyCenter().get().getName() + randomKmeans.getCenter().getName().toString(),randomKmeans);
+				randomKmeansCenters.put(randomKmeans.getRealatedCanopyCenter()
+						.get().getName()
+						+ randomKmeans.getCenter().getName().toString(),
+						randomKmeans);
 			}
 		}
-		// debug
-		System.out.println("InitKmeansJobSequenceFile - Number of K centers:"+randomKmeansCenters.size());
-		
+
 		// close the writer
 		writer.close();
 
 		// add the SequenceFile to the global
 		try {
-			DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath().toString()),conf);
-		
+
+			DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath()
+					.toString()), conf);
+			// DistributedCache.addLocalFiles(conf,Globals.KmeansCenterPath().toString());
 		} catch (Exception e) {
 			System.out
 					.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
 							+ Globals.KmeansCenterPath().toUri());
 			throw e;
 		}
-		
+
 		return randomKmeansCenters;
 
 	}
@@ -266,25 +268,23 @@ public class FinalProj {
 			double stockCount) {
 
 		double propotion = stocksPerCanopy / stockCount;
-		
+
 		// Is first canopy
 		if (usedKmeans == 0) {
 			// In case that is 0
 			if ((int) Math.floor(Globals.kmeansCount * propotion) == 0) {
 				usedKmeans = 1;
 				return 1;
-			}
-			else {
+			} else {
 				usedKmeans = (int) Math.round(Globals.kmeansCount * propotion);
-				
+
 				if (usedKmeans == Globals.kmeansCount) {
 					usedKmeans = Globals.kmeansCount - 1;
 				}
-				
+
 				return usedKmeans;
-			}	
-		}
-		else {
+			}
+		} else {
 			int temp = usedKmeans;
 			usedKmeans = 0;
 			return Globals.kmeansCount - temp;
