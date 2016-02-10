@@ -31,13 +31,11 @@ public class KMeansMapper extends
 
 		// Reading the canopy centers and the kmeans centers
 		// Getting all the paths
-		URI[] paths = context.getCacheFiles();
-		
-		System.out.println("KmeansMapper - file path:" + paths[0].getPath());
+		Path[] paths = context.getLocalCacheFiles();
 
 		// Reading the canopy centers and the kmeans centers from diserbuted
 		if (paths.length > 0) {
-			kmeansCenters = Util.ReadingKmeans(context.getConfiguration(), new Path(paths[0].getPath()));
+			kmeansCenters = Util.ReadingKmeans(context.getConfiguration(), paths[0]);
 		}
 	}
 
