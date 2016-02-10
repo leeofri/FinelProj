@@ -32,7 +32,7 @@ public class KMeansMapper extends
 		// Reading the canopy centers and the kmeans centers
 		// Getting all the paths
 		Path[] paths = context.getLocalCacheFiles();
-
+		
 		// Reading the canopy centers and the kmeans centers from diserbuted
 		if (paths.length > 0) {
 			kmeansCenters = Util.ReadingKmeans(context.getConfiguration(), paths[0]);

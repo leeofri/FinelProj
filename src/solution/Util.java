@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -137,8 +138,7 @@ public class Util {
 		SequenceFile.Reader reader = null;
 
 		try {
-			reader = new SequenceFile.Reader(conf,
-					Reader.file(KmeansCentersPath));
+			reader = new SequenceFile.Reader((FileSystem)FileSystem.getLocal(conf),KmeansCentersPath,conf);
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
