@@ -107,7 +107,9 @@ public class KMeansReducer extends
 		// delete the old centers seq file
 
 		FileSystem fs = FileSystem.get(conf);
-		fs.delete(outPath, true);
+		boolean isDeleted = fs.delete(outPath, true);
+		
+		System.out.println("KeansReaduser Cleanup - If Seq file deleted:" + isDeleted);
 
 		try {
 

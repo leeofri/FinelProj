@@ -91,7 +91,6 @@ public class FinalProj {
 			// debug
 			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
 			
-
 			counter++;
 		} while (Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
 
