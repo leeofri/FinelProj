@@ -86,7 +86,7 @@ public class FinalProj {
 			
 			// get new centers
 			oldKmeansCenters = newKmeansCenters;
-			newKmeansCenters = Util.getKmeansCenterFromFile(Globals.KmeansCenterPath(), Kmeansconf);
+			newKmeansCenters = Util.getKmeansCenterFromFile(new Path(DistributedCache.getCacheFiles(Kmeansconf)[0].getPath()), Kmeansconf);
 			
 			// debug
 			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
