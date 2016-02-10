@@ -84,6 +84,18 @@ public class FinalProj {
 			Job kmeansJob = kmeansJobConf(Kmeansconf, counter, args);
 			kmeansJob.waitForCompletion(true);
 			
+			// Set the Cache files
+			try {
+				DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath()
+						.toString()), Kmeansconf);
+				// DistributedCache.addLocalFiles(conf,Globals.KmeansCenterPath().toString());
+			} catch (Exception e) {
+				System.out
+						.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
+								+ Globals.KmeansCenterPath().toUri());
+				throw e;
+			}
+			
 			// get new centers
 			oldKmeansCenters = newKmeansCenters;
 			newKmeansCenters = Util.getKmeansCenterFromFile(DistributedCache.getLocalCacheFiles(Kmeansconf)[0], Kmeansconf);

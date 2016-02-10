@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -33,6 +34,7 @@ public class KMeansMapper extends
 		// Getting all the paths
 		Path[] paths = context.getLocalCacheFiles();
 		
+		System.out.println("KmeansMapper DistributedCache - num of file in cache:" + paths.length);
 		// Reading the canopy centers and the kmeans centers from diserbuted
 		if (paths.length > 0) {
 			kmeansCenters = Util.ReadingKmeans(context.getConfiguration(), paths[0]);
