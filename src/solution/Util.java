@@ -13,7 +13,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.Writable;
 
-import solution.ThirdParty.StdRandom;
+import solution.StdRandom;
 
 public class Util {
 
