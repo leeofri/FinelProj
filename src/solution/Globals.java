@@ -47,7 +47,7 @@ public class Globals {
 	
 	public static Path KmeansCenterPath()
 	{
-		return new Path("./data/SequenceFile.kmeansCenters");
+		return new Path("./finalrun/data/SequenceFile.kmeansCenters");
 	}
 	
 	public static Path UserConfigFilePath()
