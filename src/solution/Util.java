@@ -1,6 +1,10 @@
 package solution;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -103,6 +107,16 @@ public class Util {
 		int count = 0;
 		while (reader.next(key, val)) {
 			fileKmeansCenters.put(val.getRealatedCanopyCenter().get().getName() + val.getCenter().getName().toString(), val);
+			System.out.println(val.getCenter().getName());
+		for (int i = 0; i < val.getCenter().get().get().length; i++) {
+			for (int j = 0; j < val.getCenter().get().get()[i].length; j++) {
+				System.out.print(val.getCenter().get().get()[i][j]+" ");
+			}
+			
+		}
+		
+		System.out.println("--------------------------------------");
+			System.out.println(val);
 			val =  new KMeansCenter();
 		}
 		
@@ -165,5 +179,40 @@ public class Util {
 		
 		return kmeansFromFile;
 
+	}
+	
+	public static void writeFileToHDFS (Configuration conf, String path, String Contant, Boolean ifAppend)
+	{
+		try{
+            Path pt=new Path(path);
+            FileSystem fs = FileSystem.get(conf);
+            
+            if (!ifAppend)
+            {
+            	fs.delete(pt,true);
+            }
+            
+            BufferedWriter br=new BufferedWriter(new OutputStreamWriter(fs.create(pt,true)));;
+            br.write(Contant);
+            br.close();
+    }catch(Exception e){
+            System.out.println("File not found");
+    }
+	}
+	
+	public static String readFileToHDFS (Configuration conf, String path)
+	{
+		String Content = new String();
+		try{
+			Path pt=new Path(path);
+            FileSystem fs = FileSystem.get(conf);
+            BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(pt)));
+            String line;
+            Content=br.readLine();
+    }catch(Exception e){
+            System.out.println("File not found");
+    }
+		
+		return Content;
 	}
 }

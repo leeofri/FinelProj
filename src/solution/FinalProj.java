@@ -56,77 +56,52 @@ public class FinalProj {
 		job.setMapOutputKeyClass(IntWritable.class);
 		job.setMapOutputValueClass(canopyCenter.class);
 
-		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
-		// FileInputFormat.addInputPath(job, new Path(args[0]));
-
-		// debug localhost
 		FileOutputFormat.setOutputPath(job, Globals.OutputFolderCanopy());
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		
 		// delete the privies run output
-	    IsDeleteUtputFolder(true);
+	    IsDeleteUtputFolder(false);
 		
 	    // run canopy
 		job.waitForCompletion(true);
 
-		// Kmeans
-		Configuration Kmeansconf = new Configuration();
-
 		// Adding the canopy centers and the kmeans centres to the cache
 		// kmeans get the canopy centers from SequenceFile
 		Hashtable<String,KMeansCenter> oldKmeansCenters = null;
-		Hashtable<String,KMeansCenter> newKmeansCenters = InitKmeansJobSequenceFile(Kmeansconf);
+		Hashtable<String,KMeansCenter> newKmeansCenters = InitKmeansJobSequenceFile(new Configuration());
 		
 	
 		int counter = 1;
 		do{
-			// job config
-			Job kmeansJob = kmeansJobConf(Kmeansconf, counter, args);
-			kmeansJob.waitForCompletion(true);
+			// job config and run
+			kmeansJobConf(args,0,counter);
 			
-			// Set the Cache files
-//			try {
-//				DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath()
-//						.toString()), Kmeansconf);
-//			} catch (Exception e) {
-//				System.out
-//						.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
-//								+ Globals.KmeansCenterPath().toUri());
-//				throw e;
-//			}
 			
 			// get new centers
 			oldKmeansCenters = newKmeansCenters;
-			newKmeansCenters = Util.getKmeansCenterFromFile(Globals.KmeansCenterPath(), Kmeansconf);
+			newKmeansCenters = Util.getKmeansCenterFromFile(Globals.KmeansCenterPath(), new Configuration());
 			
 			// debug
 			System.out.println("Main - old center: " + oldKmeansCenters.toString());
 			System.out.println("Main - new center: " + newKmeansCenters.toString());
-			
-			// run on the hashtable and comper distances
-			for (String kmeansCenterName : newKmeansCenters.keySet()) {
-				
-				// debug
-				System.out.println("Main - center:" + kmeansCenterName + " diffrence(distance):" + oldKmeansCenters.get(kmeansCenterName).getCenter().distance(newKmeansCenters.get(kmeansCenterName).getCenter()));			
-				
-			}
-			
-
-			System.out.println("Main - Run No:"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
+			System.out.println("Main - Run No:"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), new Configuration()) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
 			
 			counter++;
 		} while (Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
 
 		// Last run for write output
-		Globals.turnOnLastRunFlag();
-		Job kmeansJob = kmeansJobConf(Kmeansconf, 0, args);
-		kmeansJob.waitForCompletion(true);
+		kmeansJobConf(args,1,0);
 
 	}
 
-	private static Job kmeansJobConf (Configuration Kmeansconf, int iteration, String[] args) throws IOException
+	private static Boolean kmeansJobConf (String[] args, Integer isLastRun,int iteration) throws IOException, InterruptedException, ClassNotFoundException
 	{
-		Job job = Job.getInstance(Kmeansconf, "FinelProj.KMeans"+iteration);
+		Configuration Kmeansconf = new Configuration();
+		Kmeansconf.set("num.lastrun",isLastRun.toString());
+		Util.writeFileToHDFS(Kmeansconf, "./finalrun/data/isLastRunTrigger", isLastRun.toString(),true);
+	
+		
+		Job job = new Job(Kmeansconf, "FinelProj.KMeans"+iteration);
 
 		// the kmeans config
 		job.setJarByClass(FinalProj.class);
@@ -137,13 +112,10 @@ public class FinalProj {
 		job.setMapOutputKeyClass(KMeansCenter.class);
 		job.setMapOutputValueClass(StockWritable.class);
 
-		// FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, Globals.OutputFolderKmeans(iteration));
-		//FileInputFormat.addInputPath(job, Globals.InputFolder());
 		
-		return job;
-
+		return job.waitForCompletion(true);
 	}
 
 	private static void IsDeleteUtputFolder(Boolean indicate) {

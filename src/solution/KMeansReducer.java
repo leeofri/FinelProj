@@ -30,8 +30,13 @@ public class KMeansReducer extends
 	protected void reduce(KMeansCenter key, Iterable<StockWritable> values,
 			Context context) throws IOException, InterruptedException {
 
-		if (Globals.isLastReduce()) {
-
+		// check last run trigger
+		String isLastRun = context.getConfiguration().get("num.lastrun");
+		isLastRun = Util.readFileToHDFS(context.getConfiguration(), "./finalrun/data/isLastRunTrigger");
+		
+		Util.writeFileToHDFS(context.getConfiguration(), "./finalrun/data/Leelog", isLastRun.toString(),true);
+		if (Integer.parseInt(isLastRun.trim()) == 1) {
+			Util.writeFileToHDFS(context.getConfiguration(), "./finalrun/data/LeelogInIf","in",true);
 			for (StockWritable stock : values) {
 				context.write(new Text(key.getRealatedCanopyCenter().get()
 						.getName()
