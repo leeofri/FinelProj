@@ -101,21 +101,22 @@ public class KMeansReducer extends
 		Path outPath = Globals.KmeansCenterPath();
 
 		// get the old point
+//		Hashtable<String, List<KMeansCenter>> oldCenters = Util.ReadingKmeans(
+//				conf, context.getLocalCacheFiles()[0]);
 		Hashtable<String, List<KMeansCenter>> oldCenters = Util.ReadingKmeans(
-				conf, context.getLocalCacheFiles()[0]);
+				conf, Globals.KmeansCenterPath());
+
 
 		// delete the old centers seq file
 
 		FileSystem fs = FileSystem.get(conf);
-		boolean isDeleted = fs.delete(outPath, true);
-		
-		System.out.println("KeansReaduser Cleanup - If Seq file deleted:" + isDeleted);
+		fs.delete(outPath, true);
 
 		try {
 
 			// write center to the file
-			final Writer writer = SequenceFile.createWriter(
-					context.getConfiguration(), Writer.file(outPath),
+			final Writer writer = SequenceFile.createWriter(conf,
+					Writer.file(outPath),
 					Writer.keyClass(Text.class),
 					Writer.valueClass(KMeansCenter.class));
 

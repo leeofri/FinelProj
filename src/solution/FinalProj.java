@@ -85,22 +85,34 @@ public class FinalProj {
 			kmeansJob.waitForCompletion(true);
 			
 			// Set the Cache files
-			try {
-				DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath()
-						.toString()), Kmeansconf);
-			} catch (Exception e) {
-				System.out
-						.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
-								+ Globals.KmeansCenterPath().toUri());
-				throw e;
-			}
+//			try {
+//				DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath()
+//						.toString()), Kmeansconf);
+//			} catch (Exception e) {
+//				System.out
+//						.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
+//								+ Globals.KmeansCenterPath().toUri());
+//				throw e;
+//			}
 			
 			// get new centers
 			oldKmeansCenters = newKmeansCenters;
 			newKmeansCenters = Util.getKmeansCenterFromFile(Globals.KmeansCenterPath(), Kmeansconf);
 			
 			// debug
-			System.out.println("Main - Run No':"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
+			System.out.println("Main - old center: " + oldKmeansCenters.toString());
+			System.out.println("Main - new center: " + newKmeansCenters.toString());
+			
+			// run on the hashtable and comper distances
+			for (String kmeansCenterName : newKmeansCenters.keySet()) {
+				
+				// debug
+				System.out.println("Main - center:" + kmeansCenterName + " diffrence(distance):" + oldKmeansCenters.get(kmeansCenterName).getCenter().distance(newKmeansCenters.get(kmeansCenterName).getCenter()));			
+				
+			}
+			
+
+			System.out.println("Main - Run No:"+ counter +" |Num of kmeans in file:" + Util.numberOfRowsInSeqFile(Globals.KmeansCenterPath(), Kmeansconf) + " Same centers:" + Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
 			
 			counter++;
 		} while (Util.comperKMeansCenter(oldKmeansCenters, newKmeansCenters));
@@ -258,17 +270,17 @@ public class FinalProj {
 		writer.close();
 
 		// add the SequenceFile to the global
-		try {
-
-			DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath()
-					.toString()), conf);
-			// DistributedCache.addLocalFiles(conf,Globals.KmeansCenterPath().toString());
-		} catch (Exception e) {
-			System.out
-					.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
-							+ Globals.KmeansCenterPath().toUri());
-			throw e;
-		}
+//		try {
+//
+//			DistributedCache.addCacheFile(new URI(Globals.KmeansCenterPath()
+//					.toString()), conf);
+//			// DistributedCache.addLocalFiles(conf,Globals.KmeansCenterPath().toString());
+//		} catch (Exception e) {
+//			System.out
+//					.println("ERROR - InitKmeansJobSequenceFile - problam with adding the kmeans seq file: "
+//							+ Globals.KmeansCenterPath().toUri());
+//			throw e;
+//		}
 
 		return randomKmeansCenters;
 

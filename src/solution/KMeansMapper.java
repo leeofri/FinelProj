@@ -34,11 +34,11 @@ public class KMeansMapper extends
 		// Getting all the paths
 		Path[] paths = context.getLocalCacheFiles();
 		
-		System.out.println("KmeansMapper DistributedCache - num of file in cache:" + paths.length);
+		//System.out.println("KmeansMapper DistributedCache - num of file in cache:" + paths.length);
 		// Reading the canopy centers and the kmeans centers from diserbuted
-		if (paths.length > 0) {
-			kmeansCenters = Util.ReadingKmeans(context.getConfiguration(), paths[0]);
-		}
+	//	if (paths.length > 0) {
+			kmeansCenters = Util.ReadingKmeans(context.getConfiguration(), Globals.KmeansCenterPath());
+	//	}
 	}
 
 	@Override

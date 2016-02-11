@@ -138,7 +138,8 @@ public class Util {
 		SequenceFile.Reader reader = null;
 
 		try {
-			reader = new SequenceFile.Reader((FileSystem)FileSystem.getLocal(conf),KmeansCentersPath,conf);
+			//reader = new SequenceFile.Reader((FileSystem)FileSystem.getLocal(conf),KmeansCentersPath,conf);
+			reader = new SequenceFile.Reader(conf, Reader.file(KmeansCentersPath));
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
